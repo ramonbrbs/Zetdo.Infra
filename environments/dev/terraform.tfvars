@@ -1,11 +1,11 @@
 # Dev Environment Configuration
-subscription_id        = "YOUR_DEV_SUBSCRIPTION_ID"
-shared_subscription_id = "YOUR_DEV_SUBSCRIPTION_ID"
+subscription_id        = "bb67a95f-185c-4a8b-ae32-9f35da2c9465"
+shared_subscription_id = "bb67a95f-185c-4a8b-ae32-9f35da2c9465"
 environment            = "dev"
 location_short         = "weu"
 
 # ACR (shared, in dev subscription) - values from bootstrap output
-acr_id           = "YOUR_ACR_RESOURCE_ID"
+acr_id           = "/subscriptions/bb67a95f-185c-4a8b-ae32-9f35da2c9465/resourceGroups/rg-zetdo-shared-weu/providers/Microsoft.ContainerRegistry/registries/crzetdoweu"
 acr_login_server = "crzetdoweu.azurecr.io"
 
 # Container App - minimal for dev
