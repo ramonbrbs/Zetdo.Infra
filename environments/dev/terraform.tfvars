@@ -9,7 +9,7 @@ acr_id           = "/subscriptions/bb67a95f-185c-4a8b-ae32-9f35da2c9465/resource
 acr_login_server = "crzetdoweu.azurecr.io"
 
 # Container App - minimal for dev
-container_image        = "mcr.microsoft.com/k8s/demo/hello-app:latest"
+container_image        = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
 container_cpu          = 0.25
 container_memory       = "0.5Gi"
 container_min_replicas = 0
