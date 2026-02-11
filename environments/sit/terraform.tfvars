@@ -21,3 +21,7 @@ log_retention_days     = 30
 cosmosdb_free_tier_enabled = false
 cosmosdb_enable_serverless = true
 cosmosdb_throughput        = 400
+
+# Static Web App - Free tier for sit
+static_web_app_sku_tier = "Free"
+static_web_app_sku_size = "Free"

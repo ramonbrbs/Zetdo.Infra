@@ -116,6 +116,9 @@ resource "azurerm_resource_provider_registration" "prod_container_apps" {
   name     = "Microsoft.App"
 }
 
+# Note: Microsoft.Web (for Static Web Apps) is part of the AzureRM provider's
+# core auto-registered set, so no explicit registration is needed here.
+
 # =============================================================================
 # Environment Resource Groups (each in its own subscription)
 # =============================================================================

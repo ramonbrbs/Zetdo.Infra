@@ -74,6 +74,22 @@ module "container_app" {
 }
 
 # =============================================================================
+# Static Web App
+# =============================================================================
+module "static_web_app" {
+  source = "../../modules/static_web_app"
+
+  environment         = var.environment
+  location            = module.resource_group.location
+  location_short      = var.location_short
+  resource_group_name = module.resource_group.name
+  sku_tier            = var.static_web_app_sku_tier
+  sku_size            = var.static_web_app_sku_size
+
+  tags = local.tags
+}
+
+# =============================================================================
 # ACR Pull Role Assignment (cross-subscription via shared provider)
 # =============================================================================
 resource "azurerm_role_assignment" "container_app_acr_pull" {

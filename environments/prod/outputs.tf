@@ -22,3 +22,19 @@ output "resource_group_name" {
   description = "Resource group name"
   value       = module.resource_group.name
 }
+
+output "static_web_app_url" {
+  description = "Static Web App HTTPS URL"
+  value       = module.static_web_app.default_url
+}
+
+output "static_web_app_name" {
+  description = "Static Web App name"
+  value       = module.static_web_app.static_web_app_name
+}
+
+output "static_web_app_api_key" {
+  description = "Static Web App deployment token (for external CI/CD)"
+  value       = module.static_web_app.api_key
+  sensitive   = true
+}

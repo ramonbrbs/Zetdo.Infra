@@ -21,3 +21,7 @@ log_retention_days     = 90
 cosmosdb_free_tier_enabled = false
 cosmosdb_enable_serverless = true
 cosmosdb_throughput        = 400
+
+# Static Web App - Standard tier for prod (SLA, custom domains, etc.)
+static_web_app_sku_tier = "Standard"
+static_web_app_sku_size = "Standard"

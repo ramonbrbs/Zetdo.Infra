@@ -90,3 +90,16 @@ variable "cosmosdb_throughput" {
   type        = number
   default     = 400
 }
+
+# Static Web App variables
+variable "static_web_app_sku_tier" {
+  description = "SKU tier for Static Web App (Free or Standard)"
+  type        = string
+  default     = "Free"
+}
+
+variable "static_web_app_sku_size" {
+  description = "SKU size for Static Web App (Free or Standard)"
+  type        = string
+  default     = "Free"
+}
