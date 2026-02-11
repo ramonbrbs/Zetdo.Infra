@@ -26,7 +26,7 @@ variable "github_org" {
 }
 
 variable "github_repo" {
-  description = "GitHub repository name (infrastructure repo)"
+  description = "GitHub repository name (infrastructure repo) - must match exactly, case-sensitive"
   type        = string
-  default     = "zetdo-infra"
+  default     = "Zetdo.Infra"
 }
