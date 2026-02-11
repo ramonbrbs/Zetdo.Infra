@@ -1,0 +1,46 @@
+name: "Terraform Shared Infrastructure"
+
+on:
+  push:
+    branches:
+      - dev
+      - master
+    paths:
+      - "environments/shared/**"
+  pull_request:
+    branches:
+      - dev
+      - master
+    paths:
+      - "environments/shared/**"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: terraform-shared
+  cancel-in-progress: false
+
+jobs:
+  # =========================================================================
+  # Plan
+  # =========================================================================
+  plan:
+    uses: ./.github/workflows/_terraform-plan.yml
+    with:
+      environment: shared
+    secrets: inherit
+
+  # =========================================================================
+  # Apply (only on push to branches or manual dispatch, not PRs)
+  # =========================================================================
+  apply:
+    needs: plan
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_terraform-apply.yml
+    with:
+      environment: shared
+    secrets: inherit

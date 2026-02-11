@@ -55,42 +55,40 @@ Each environment deploys to its own Azure subscription. Shared resources (state 
 
 ## Quick Start
 
-### 1. Bootstrap (one-time setup)
+### 1. Seed (one-time setup)
 
-The bootstrap creates shared infrastructure: state storage, ACR, OIDC identity, and environment resource groups (each in its own subscription).
+The seed script creates chicken-and-egg infrastructure using Azure CLI: state storage, OIDC identity, resource groups, and role assignments. It's idempotent and safe to re-run.
 
 ```bash
-# Copy and edit the variables file
-cp bootstrap/terraform.tfvars.example bootstrap/terraform.tfvars
-# Edit bootstrap/terraform.tfvars with your subscription IDs (one per environment)
+# Set subscription IDs
+export DEV_SUBSCRIPTION_ID="your-dev-subscription-id"
+export SIT_SUBSCRIPTION_ID="your-sit-subscription-id"
+export PROD_SUBSCRIPTION_ID="your-prod-subscription-id"
 
-# Run bootstrap
-cd bootstrap
-terraform init
-terraform plan -var-file=terraform.tfvars
-terraform apply -var-file=terraform.tfvars
+# Run the seed script
+./scripts/seed.sh
 
 # Note the outputs - you'll need them for GitHub secrets
-terraform output
 ```
 
 ### 2. Configure GitHub Secrets
 
-From the bootstrap outputs, add **repository-level secrets** (Settings > Secrets and variables > Actions):
+From the seed script output, add **repository-level secrets** (Settings > Secrets and variables > Actions):
 
 | Secret (Repository-level) | Value Source |
 |----------------------------|-------------|
-| `AZURE_CLIENT_ID` | `client_id` from bootstrap output |
-| `AZURE_TENANT_ID` | `tenant_id` from bootstrap output |
-| `AZURE_SHARED_SUBSCRIPTION_ID` | `shared_subscription_id` from bootstrap output (dev subscription) |
-| `ACR_LOGIN_SERVER` | `container_registry_login_server` from bootstrap output |
+| `AZURE_CLIENT_ID` | `AZURE_CLIENT_ID` from seed output |
+| `AZURE_TENANT_ID` | `AZURE_TENANT_ID` from seed output |
+| `AZURE_SHARED_SUBSCRIPTION_ID` | `AZURE_SHARED_SUBSCRIPTION_ID` from seed output (dev subscription) |
+| `ACR_LOGIN_SERVER` | `ACR_LOGIN_SERVER` from seed output |
 
 ### 3. Configure GitHub Environments
 
-Create three **GitHub Environments** (Settings > Environments):
+Create four **GitHub Environments** (Settings > Environments):
 
 | Environment | Protection Rules |
 |-------------|-----------------|
+| `shared` | None |
 | `dev` | None |
 | `sit` | Optional: require reviewers |
 | `prod` | **Required: add at least 1 reviewer** |
@@ -105,7 +103,7 @@ This allows each environment to deploy to its own subscription while sharing the
 
 ### 4. Update terraform.tfvars
 
-Update each environment's `terraform.tfvars` with actual values from the bootstrap output:
+Update each environment's `terraform.tfvars` with actual values from the seed script output:
 - `environments/dev/terraform.tfvars`
 - `environments/sit/terraform.tfvars`
 - `environments/prod/terraform.tfvars`
@@ -113,8 +111,8 @@ Update each environment's `terraform.tfvars` with actual values from the bootstr
 Each file requires:
 - `subscription_id` - the environment's own Azure subscription ID
 - `shared_subscription_id` - the dev subscription ID (where ACR and state live)
-- `acr_id` - the full resource ID of the container registry (`container_registry_id` from bootstrap output)
-- `acr_login_server` - the ACR login server (`container_registry_login_server` from bootstrap output)
+- `acr_id` - the full resource ID of the container registry
+- `acr_login_server` - the ACR login server
 
 ### 5. Deploy
 
@@ -204,21 +202,20 @@ To promote an image across environments, trigger the update workflow with the sa
 ```
 .
 ├── .github/workflows/          # CI/CD pipelines
-│   ├── terraform.yml           # Main orchestrator
+│   ├── terraform.yml           # Main orchestrator (dev/sit/prod)
+│   ├── terraform-shared.yml    # Shared infrastructure workflow
 │   ├── _terraform-plan.yml     # Reusable plan workflow
 │   ├── _terraform-apply.yml    # Reusable apply workflow
 │   └── update-container-image.yml
-├── bootstrap/                  # One-time setup (run locally)
-│   ├── main.tf                 # State storage, ACR, OIDC identity
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── terraform.tfvars.example
+├── scripts/
+│   └── seed.sh                 # Idempotent Azure CLI seed script (one-time setup)
 ├── modules/                    # Reusable Terraform modules
 │   ├── resource_group/         # Resource group data source
 │   ├── container_app/          # Container App + Environment + Logging + Identity
 │   ├── static_web_app/         # Azure Static Web App for Angular frontend
 │   └── cosmosdb/               # CosmosDB account + database
 ├── environments/               # Per-environment configurations
+│   ├── shared/                 # Shared infrastructure (ACR) - CI/CD managed
 │   ├── dev/
 │   ├── sit/
 │   └── prod/
@@ -285,4 +282,4 @@ Production deployments require reviewer approval via GitHub Environment protecti
 - **Cross-Subscription ACR Pull**: Each environment's Container App managed identity gets `AcrPull` on the shared ACR via an aliased provider (`azurerm.shared`).
 - **No VNet**: Simplified for MVP. Add VNet integration, private endpoints, and NSGs when needed.
 - **OIDC Only**: No Azure credentials stored as GitHub secrets. Authentication uses short-lived tokens via federated identity.
-- **Single Subscription**: If using one subscription for all environments, set the same subscription ID everywhere (`subscription_ids` map in bootstrap, `subscription_id` and `shared_subscription_id` in env tfvars, and all GitHub secrets).
+- **Single Subscription**: If using one subscription for all environments, set the same subscription ID everywhere (env vars for seed script, `subscription_id` and `shared_subscription_id` in env tfvars, and all GitHub secrets).

@@ -7,7 +7,9 @@
       "WebFetch(domain:developer.hashicorp.com)",
       "WebFetch(domain:thomasthornton.cloud)",
       "Bash(git init:*)",
-      "Bash(git remote add:*)"
+      "Bash(git remote add:*)",
+      "Bash(terraform -chdir=/Users/ramonbarbosa/Documents/code/CapyWorks/Zetdo_Infra_Final fmt -check -recursive)",
+      "Bash(terraform validate:*)"
     ]
   }
 }
