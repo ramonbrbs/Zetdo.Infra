@@ -9,4 +9,4 @@ subscription_ids = {
 location       = "westeurope"
 location_short = "weu"
 github_org     = "ramonbrbs"
-github_repo    = "zetdo-infra"
+github_repo    = "Zetdo.Infra"
