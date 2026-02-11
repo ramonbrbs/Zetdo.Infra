@@ -12,14 +12,16 @@ terraform {
 # Default provider targets this environment's subscription
 provider "azurerm" {
   features {}
-  subscription_id = var.subscription_id
+  subscription_id                 = var.subscription_id
+  resource_provider_registrations = "all"
 }
 
 # Shared provider targets the dev subscription (where ACR and state live)
 provider "azurerm" {
   alias = "shared"
   features {}
-  subscription_id = var.shared_subscription_id
+  subscription_id                 = var.shared_subscription_id
+  resource_provider_registrations = "none"
 }
 
 # =============================================================================

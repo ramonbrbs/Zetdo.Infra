@@ -233,6 +233,14 @@ resource "azurerm_role_assignment" "prod_contributor" {
 
 # -- Shared resources (dev subscription) --
 
+# User Access Administrator on shared RG (allows environment Terraform to create
+# ACR role assignments for Container App managed identities)
+resource "azurerm_role_assignment" "shared_uaa" {
+  scope                = azurerm_resource_group.shared.id
+  role_definition_name = "User Access Administrator"
+  principal_id         = azuread_service_principal.github_actions.object_id
+}
+
 # AcrPush on the container registry (for app repo CI/CD to push images)
 resource "azurerm_role_assignment" "acr_push" {
   scope                = azurerm_container_registry.acr.id
