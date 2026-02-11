@@ -52,6 +52,13 @@ module "cosmosdb" {
 # =============================================================================
 # Container App
 # =============================================================================
+
+# TODO: Remove this import block after successful apply
+import {
+  to = module.container_app.azurerm_container_app.this
+  id = "/subscriptions/bb67a95f-185c-4a8b-ae32-9f35da2c9465/resourceGroups/rg-zetdo-dev-weu/providers/Microsoft.App/containerApps/ca-zetdo-dev-weu"
+}
+
 module "container_app" {
   source = "../../modules/container_app"
 
