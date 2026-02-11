@@ -20,6 +20,10 @@ Terraform infrastructure-as-code for the Zetdo SaaS application on Microsoft Azu
     | Container  |        | Container  |        | Container  |
     | App        |        | App        |        | App        |
     +------------+        +------------+        +------------+
+    | Static     |        | Static     |        | Static     |
+    | Web App    |        | Web App    |        | Web App    |
+    | (Free)     |        | (Free)     |        | (Standard) |
+    +------------+        +------------+        +------------+
     | CosmosDB   |        | CosmosDB   |        | CosmosDB   |
     | (Free Tier)|        | (Serverless)|        | (Serverless)|
     +------------+        +------------+        +------------+
@@ -35,11 +39,11 @@ Each environment deploys to its own Azure subscription. Shared resources (state 
 
 ## Environments
 
-| Environment | Trigger | Branch/Tag | CosmosDB Mode |
-|-------------|---------|------------|---------------|
-| dev | Push to `dev` | `refs/heads/dev` | Free Tier (400 RU/s provisioned) |
-| sit | Push to `master` | `refs/heads/master` | Serverless (pay-per-use) |
-| prod | Tag `release-*` | `refs/tags/release-*` | Serverless (pay-per-use) |
+| Environment | Trigger | Branch/Tag | CosmosDB Mode | Static Web App SKU |
+|-------------|---------|------------|---------------|--------------------|
+| dev | Push to `dev` | `refs/heads/dev` | Free Tier (400 RU/s provisioned) | Free |
+| sit | Push to `master` | `refs/heads/master` | Serverless (pay-per-use) | Free |
+| prod | Tag `release-*` | `refs/tags/release-*` | Serverless (pay-per-use) | Standard |
 
 ## Prerequisites
 
@@ -134,6 +138,31 @@ git tag release-1.0.0
 git push origin release-1.0.0
 ```
 
+## Deploying the Angular Frontend
+
+The Angular frontend is hosted on **Azure Static Web Apps**. Each environment has its own Static Web App resource (`stapp-zetdo-{env}-weu`). Deployment is managed from the Angular application repository using the deployment token.
+
+### Setup in the Angular repo
+
+1. After `terraform apply`, retrieve the deployment token:
+   ```bash
+   cd environments/dev
+   terraform output -raw static_web_app_api_key
+   ```
+
+2. Add it as a GitHub secret in your Angular repo (e.g., `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV`)
+
+3. Use the `Azure/static-web-apps-deploy` GitHub Action:
+   ```yaml
+   - uses: Azure/static-web-apps-deploy@v1
+     with:
+       azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+       app_location: "/"
+       output_location: "dist/your-app-name/browser"
+   ```
+
+Repeat for each environment (sit, prod) with their respective tokens.
+
 ## Updating the Application Container
 
 The application container image is managed by a **separate application repository**. The Container App starts with a placeholder image and is updated externally.
@@ -187,6 +216,7 @@ To promote an image across environments, trigger the update workflow with the sa
 ├── modules/                    # Reusable Terraform modules
 │   ├── resource_group/         # Resource group data source
 │   ├── container_app/          # Container App + Environment + Logging + Identity
+│   ├── static_web_app/         # Azure Static Web App for Angular frontend
 │   └── cosmosdb/               # CosmosDB account + database
 ├── environments/               # Per-environment configurations
 │   ├── dev/
@@ -228,6 +258,7 @@ Production deployments require reviewer approval via GitHub Environment protecti
 | CosmosDB Account | `cosmos-zetdo-{env}-{region}` | `cosmos-zetdo-dev-weu` |
 | Log Analytics | `log-zetdo-{env}-{region}` | `log-zetdo-dev-weu` |
 | Managed Identity | `id-zetdo-{env}-{region}` | `id-zetdo-dev-weu` |
+| Static Web App | `stapp-zetdo-{env}-{region}` | `stapp-zetdo-dev-weu` |
 | Storage Account | `stzetdotfstate{region}` | `stzetdotfstateweu` |
 | Container Registry | `crzetdo{region}` | `crzetdoweu` |
 
@@ -238,16 +269,19 @@ Production deployments require reviewer approval via GitHub Environment protecti
 | Container App (per env) | 0.25 CPU, 0.5Gi, scale to 0 | ~$15-25 |
 | CosmosDB (dev) | Free tier (400 RU/s, 25GB) | $0 |
 | CosmosDB (sit/prod) | Serverless (pay-per-use) | ~$0-5 |
+| Static Web App (dev/sit) | Free tier | $0 |
+| Static Web App (prod) | Standard tier | ~$9 |
 | Container Registry | Basic SKU | ~$5 |
 | Storage Account | LRS, state only | ~$1 |
 | Log Analytics | Per-GB pricing | ~$5-10 |
-| **Total (3 envs)** | | **~$50-80/month** |
+| **Total (3 envs)** | | **~$60-90/month** |
 
 ## Important Notes
 
 - **Multi-Subscription**: Each environment deploys to its own subscription. Shared resources (ACR, state storage, service principal) live in the dev subscription. The `ARM_SUBSCRIPTION_ID` in CI/CD always points to the dev subscription (for Terraform state access), while each environment's provider targets its own subscription via `subscription_id` in tfvars.
 - **CosmosDB Free Tier**: Only 1 per Azure subscription. Assigned to dev. If you already have one, set `cosmosdb_free_tier_enabled = false` in dev's tfvars and use serverless instead.
 - **Container Image**: Protected by `lifecycle { ignore_changes }` in Terraform. External updates via `az containerapp update` won't be reverted by `terraform apply`.
+- **Static Web App**: Deployed externally via the `api_key` (deployment token). Terraform provisions the resource; the Angular repo deploys content. Free tier for dev/sit, Standard for prod.
 - **Cross-Subscription ACR Pull**: Each environment's Container App managed identity gets `AcrPull` on the shared ACR via an aliased provider (`azurerm.shared`).
 - **No VNet**: Simplified for MVP. Add VNet integration, private endpoints, and NSGs when needed.
 - **OIDC Only**: No Azure credentials stored as GitHub secrets. Authentication uses short-lived tokens via federated identity.

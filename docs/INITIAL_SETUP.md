@@ -5,7 +5,7 @@
 This guide walks through deploying the Zetdo infrastructure from scratch. The process has two phases:
 
 1. **Bootstrap** (local) - Creates shared resources: state storage, ACR, OIDC identity, resource groups
-2. **CI/CD deployment** (GitHub Actions) - Deploys environment resources: Container App, CosmosDB
+2. **CI/CD deployment** (GitHub Actions) - Deploys environment resources: Container App, Static Web App, CosmosDB
 
 ## Prerequisites
 
@@ -119,9 +119,35 @@ Monitor progress in the **Actions** tab of your GitHub repository.
 | Container App Environment | `cae-zetdo-dev-weu` | Linked to Log Analytics |
 | User-Assigned Managed Identity | `id-zetdo-dev-weu` | For ACR pull |
 | Container App | `ca-zetdo-dev-weu` | 0.25 CPU, 0.5Gi, scale 0-2 |
+| Static Web App | `stapp-zetdo-dev-weu` | Free tier, Angular frontend |
 | CosmosDB Account | `cosmos-zetdo-dev-weu` | Free tier (400 RU/s) |
 | CosmosDB Database | `zetdo-db` | SQL API |
 | ACR Pull Role Assignment | - | Cross-subscription via shared provider |
+
+## Phase 4: Configure Angular Frontend Deployment
+
+After the dev environment is deployed, set up the Angular frontend repo to deploy to the Static Web App.
+
+### 4.1 Get the deployment token
+
+```bash
+cd environments/dev
+terraform output -raw static_web_app_api_key
+```
+
+### 4.2 Add to Angular repo secrets
+
+In the Angular frontend repository, go to **Settings > Secrets** and add:
+
+| Secret | Value |
+|--------|-------|
+| `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV` | Deployment token from step 4.1 |
+
+### 4.3 Add GitHub Actions workflow to Angular repo
+
+Use the `Azure/static-web-apps-deploy@v1` action with `output_location` pointing to your Angular build output (e.g., `dist/your-app-name/browser`).
+
+Repeat for sit and prod environments after deploying them.
 
 ## Later: Adding SIT and Prod
 

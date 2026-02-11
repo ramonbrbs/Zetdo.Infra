@@ -2,7 +2,7 @@
 
 ## Project Overview
 Terraform infrastructure-as-code for the Zetdo SaaS application on Azure.
-Three environments (dev, sit, prod) with Container Apps + CosmosDB per environment.
+Three environments (dev, sit, prod) with Container Apps, CosmosDB, and Static Web App per environment.
 
 ## Architecture
 - **Multi-subscription**: Each environment can be in a different Azure subscription. Shared resources (state, ACR) live in the dev subscription.
@@ -10,6 +10,7 @@ Three environments (dev, sit, prod) with Container Apps + CosmosDB per environme
 - **Bootstrap**: One-time setup in `bootstrap/` for state storage, ACR, OIDC identity, and env resource groups (across subscriptions)
 - **CI/CD**: GitHub Actions with OIDC authentication (no stored secrets)
 - **Container App**: Application container image updated externally via separate repo
+- **Static Web App**: Angular frontend hosted on Azure Static Web Apps, deployed externally via deployment token
 - **Cross-subscription ACR**: Each environment uses `provider "azurerm" alias "shared"` to create ACR role assignments in the dev subscription
 
 ## Key Commands
@@ -44,7 +45,7 @@ terraform validate
 | prod        | Tag matching release-* | `refs/tags/release-*` |
 
 ## Naming Convention
-- Resources: `{type}-zetdo-{env}-{region}` (e.g., `ca-zetdo-dev-weu`)
+- Resources: `{type}-zetdo-{env}-{region}` (e.g., `ca-zetdo-dev-weu`, `stapp-zetdo-dev-weu`)
 - Storage accounts (no hyphens): `stzetdo{purpose}{region}` (e.g., `stzetdotfstateweu`)
 - Container Registry: `crzetdo{region}` (e.g., `crzetdoweu`)
 
@@ -62,6 +63,7 @@ terraform validate
 ## Important Constraints
 - CosmosDB free tier: only 1 per Azure subscription (assigned to dev)
 - Container App image: managed externally, protected by `lifecycle { ignore_changes }`
+- Static Web App: deployed externally via deployment token (`api_key`), Free tier for dev/sit, Standard for prod
 - Terraform state: stored in Azure Storage (dev subscription) with OIDC auth
 - ACR: shared across all environments (Basic SKU, dev subscription)
 - ACR role assignment: created at environment level with `provider = azurerm.shared`
@@ -73,6 +75,7 @@ terraform validate
 - `modules/resource_group/` - Resource group data source
 - `modules/container_app/` - Container App + Environment + Log Analytics
 - `modules/cosmosdb/` - CosmosDB account + database
+- `modules/static_web_app/` - Azure Static Web App for Angular frontend
 - `modules/container_registry/` - Azure Container Registry data source (optional, for single-subscription)
 - `environments/{dev,sit,prod}/` - Environment-specific Terraform configs
 - `.github/workflows/` - CI/CD pipelines
@@ -82,3 +85,4 @@ terraform validate
 - Set throughput on CosmosDB SQL databases when using serverless accounts
 - Use more than one CosmosDB free tier account per subscription
 - Store Azure credentials as GitHub secrets (use OIDC only)
+- Manage Static Web App deployment content in Terraform (deployed from Angular repo via `api_key`)
