@@ -97,6 +97,26 @@ resource "azurerm_storage_container" "tfstate" {
 }
 
 # =============================================================================
+# Resource Provider Registrations (per subscription)
+# Microsoft.App is not in the AzureRM "core" set, so it must be registered
+# explicitly. The environment providers use resource_provider_registrations =
+# "none" (SP only has RG-level Contributor), so we register it here instead.
+# =============================================================================
+resource "azurerm_resource_provider_registration" "dev_container_apps" {
+  name = "Microsoft.App"
+}
+
+resource "azurerm_resource_provider_registration" "sit_container_apps" {
+  provider = azurerm.sit
+  name     = "Microsoft.App"
+}
+
+resource "azurerm_resource_provider_registration" "prod_container_apps" {
+  provider = azurerm.prod
+  name     = "Microsoft.App"
+}
+
+# =============================================================================
 # Environment Resource Groups (each in its own subscription)
 # =============================================================================
 resource "azurerm_resource_group" "dev" {

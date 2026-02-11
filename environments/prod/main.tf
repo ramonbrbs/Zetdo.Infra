@@ -13,7 +13,7 @@ terraform {
 provider "azurerm" {
   features {}
   subscription_id                 = var.subscription_id
-  resource_provider_registrations = "all"
+  resource_provider_registrations = "none"
 }
 
 # Shared provider targets the dev subscription (where ACR and state live)
