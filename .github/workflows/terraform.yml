@@ -1,0 +1,88 @@
+name: "Terraform CI/CD"
+
+on:
+  push:
+    branches:
+      - dev
+      - master
+    tags:
+      - "release-*"
+  pull_request:
+    branches:
+      - dev
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # =========================================================================
+  # Determine which environment to target based on branch/tag
+  # =========================================================================
+  resolve-environment:
+    name: "Resolve Environment"
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.resolve.outputs.environment }}
+      is_apply: ${{ steps.resolve.outputs.is_apply }}
+    steps:
+      - name: Resolve environment from ref
+        id: resolve
+        run: |
+          REF="${{ github.ref }}"
+          EVENT="${{ github.event_name }}"
+
+          if [[ "$REF" == refs/tags/release-* ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "is_apply=true" >> $GITHUB_OUTPUT
+          elif [[ "$REF" == "refs/heads/master" ]]; then
+            echo "environment=sit" >> $GITHUB_OUTPUT
+            if [[ "$EVENT" == "push" ]]; then
+              echo "is_apply=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_apply=false" >> $GITHUB_OUTPUT
+            fi
+          elif [[ "$REF" == "refs/heads/dev" ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            if [[ "$EVENT" == "push" ]]; then
+              echo "is_apply=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_apply=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # PR targeting dev or master
+            TARGET="${{ github.base_ref }}"
+            if [[ "$TARGET" == "master" ]]; then
+              echo "environment=sit" >> $GITHUB_OUTPUT
+            else
+              echo "environment=dev" >> $GITHUB_OUTPUT
+            fi
+            echo "is_apply=false" >> $GITHUB_OUTPUT
+          fi
+
+  # =========================================================================
+  # Plan
+  # =========================================================================
+  plan:
+    needs: resolve-environment
+    uses: ./.github/workflows/_terraform-plan.yml
+    with:
+      environment: ${{ needs.resolve-environment.outputs.environment }}
+    secrets: inherit
+
+  # =========================================================================
+  # Apply (only on push to branches or tags, not PRs)
+  # =========================================================================
+  apply:
+    needs: [resolve-environment, plan]
+    if: needs.resolve-environment.outputs.is_apply == 'true'
+    uses: ./.github/workflows/_terraform-apply.yml
+    with:
+      environment: ${{ needs.resolve-environment.outputs.environment }}
+    secrets: inherit

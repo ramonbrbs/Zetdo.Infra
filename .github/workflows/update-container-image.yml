@@ -1,0 +1,84 @@
+name: "Update Container Image"
+
+on:
+  # Triggered by the application repository via repository_dispatch
+  repository_dispatch:
+    types: [update-container-image]
+
+  # Manual trigger for debugging or promotions
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - sit
+          - prod
+      image_tag:
+        description: "Container image tag"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  update-image:
+    name: "Update Container Image"
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.client_payload.environment || inputs.environment }}
+
+    env:
+      ENVIRONMENT: ${{ github.event.client_payload.environment || inputs.environment }}
+      IMAGE_TAG: ${{ github.event.client_payload.image_tag || inputs.image_tag }}
+
+    steps:
+      - name: Validate inputs
+        run: |
+          if [[ -z "$ENVIRONMENT" || -z "$IMAGE_TAG" ]]; then
+            echo "ERROR: environment and image_tag are required"
+            exit 1
+          fi
+          echo "Updating $ENVIRONMENT with image tag: $IMAGE_TAG"
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_ENV_SUBSCRIPTION_ID }}
+
+      - name: Update Container App Image
+        run: |
+          CONTAINER_APP_NAME="ca-zetdo-${ENVIRONMENT}-weu"
+          RESOURCE_GROUP="rg-zetdo-${ENVIRONMENT}-weu"
+          ACR_LOGIN_SERVER="${{ secrets.ACR_LOGIN_SERVER }}"
+          FULL_IMAGE="${ACR_LOGIN_SERVER}/zetdo-app:${IMAGE_TAG}"
+
+          echo "Updating ${CONTAINER_APP_NAME} in ${RESOURCE_GROUP}"
+          echo "New image: ${FULL_IMAGE}"
+
+          az containerapp update \
+            --name "${CONTAINER_APP_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --image "${FULL_IMAGE}"
+
+          echo "Container App updated successfully"
+
+      - name: Verify deployment
+        run: |
+          CONTAINER_APP_NAME="ca-zetdo-${ENVIRONMENT}-weu"
+          RESOURCE_GROUP="rg-zetdo-${ENVIRONMENT}-weu"
+
+          sleep 10
+
+          FQDN=$(az containerapp show \
+            --name "${CONTAINER_APP_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --query "properties.configuration.ingress.fqdn" \
+            --output tsv)
+
+          echo "Container App URL: https://${FQDN}"
