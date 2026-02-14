@@ -27,14 +27,21 @@ jobs:
 
     steps:
       - name: Validate Secrets
+        env:
+          CHECK_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          CHECK_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          CHECK_SHARED_SUB: ${{ secrets.AZURE_SHARED_SUBSCRIPTION_ID }}
+          CHECK_ENV_SUB: ${{ secrets.AZURE_ENV_SUBSCRIPTION_ID }}
+          CHECK_FIREBASE: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           missing=()
-          [ -z "${{ secrets.AZURE_CLIENT_ID }}" ] && missing+=("AZURE_CLIENT_ID")
-          [ -z "${{ secrets.AZURE_TENANT_ID }}" ] && missing+=("AZURE_TENANT_ID")
-          [ -z "${{ secrets.AZURE_SHARED_SUBSCRIPTION_ID }}" ] && missing+=("AZURE_SHARED_SUBSCRIPTION_ID")
-          if [ "${{ inputs.environment }}" != "shared" ]; then
-            [ -z "${{ secrets.AZURE_ENV_SUBSCRIPTION_ID }}" ] && missing+=("AZURE_ENV_SUBSCRIPTION_ID")
-            [ -z "${{ secrets.FIREBASE_CREDENTIAL_JSON }}" ] && missing+=("FIREBASE_CREDENTIAL_JSON")
+          [ -z "$CHECK_CLIENT_ID" ] && missing+=("AZURE_CLIENT_ID")
+          [ -z "$CHECK_TENANT_ID" ] && missing+=("AZURE_TENANT_ID")
+          [ -z "$CHECK_SHARED_SUB" ] && missing+=("AZURE_SHARED_SUBSCRIPTION_ID")
+          if [ "$ENVIRONMENT" != "shared" ]; then
+            [ -z "$CHECK_ENV_SUB" ] && missing+=("AZURE_ENV_SUBSCRIPTION_ID")
+            [ -z "$CHECK_FIREBASE" ] && missing+=("FIREBASE_CREDENTIAL_JSON")
           fi
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${missing[*]}"
