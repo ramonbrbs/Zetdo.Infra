@@ -70,7 +70,9 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -input=false -no-color -var-file=terraform.tfvars -var="firebase_credential_json=${{ secrets.FIREBASE_CREDENTIAL_JSON }}" -out=tfplan
+        env:
+          TF_VAR_firebase_credential_json: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
+        run: terraform plan -input=false -no-color -var-file=terraform.tfvars -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Upload Plan Artifact
