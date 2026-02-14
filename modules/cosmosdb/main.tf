@@ -38,11 +38,22 @@ resource "azurerm_cosmosdb_account" "this" {
 # CosmosDB SQL Database
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "this" {
-  name                = "zetdo-db"
+  name                = "UserDB"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
 
   # Do NOT set throughput when using serverless - it will error.
   # For free tier (provisioned), use 400 RU/s (minimum).
   throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "user_profiles" {
+  name                = "UserProfiles"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.this.name
+  partition_key_paths = ["/id"]
 }

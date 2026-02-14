@@ -245,6 +245,11 @@ assign_role "$DEV_RG_ID" "Contributor" "$SP_OBJECT_ID"
 assign_role "$SIT_RG_ID" "Contributor" "$SP_OBJECT_ID"
 assign_role "$PROD_RG_ID" "Contributor" "$SP_OBJECT_ID"
 
+# Per-environment RG User Access Administrator (for Key Vault and CosmosDB role assignments)
+assign_role "$DEV_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
+assign_role "$SIT_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
+assign_role "$PROD_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
+
 # Shared RG: User Access Administrator (for ACR role assignments from environments)
 assign_role "$SHARED_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
 
