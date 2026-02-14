@@ -12,7 +12,7 @@ Multi-environment Terraform IaC for the Zetdo SaaS application on Azure.
 
 - **3 environments**: dev, sit, prod - each in its own Azure subscription
 - **Shared resources** (dev subscription): Terraform state storage, Azure Container Registry (ACR)
-- **Per-environment resources**: Container App (backend API), Static Web App (Angular frontend), CosmosDB
+- **Per-environment resources**: Container App (backend API), Static Web App (Angular frontend), CosmosDB, Key Vault
 - **CI/CD**: GitHub Actions with OIDC authentication (no stored secrets)
 - **Bootstrap**: One-time local setup in `bootstrap/` for state storage, ACR, OIDC identity, and resource groups
 
@@ -23,8 +23,9 @@ bootstrap/                    # One-time setup (state storage, ACR, OIDC, RGs)
 modules/
   resource_group/             # Data source for existing RGs
   container_app/              # Container App + Environment + Log Analytics + Managed Identity
+  cosmosdb/                   # CosmosDB account + database (managed identity access)
+  key_vault/                  # Azure Key Vault with RBAC authorization
   static_web_app/             # Azure Static Web App for Angular frontend
-  cosmosdb/                   # CosmosDB account + database
   container_registry/         # ACR data source (optional)
 environments/
   dev/                        # Dev environment config
@@ -49,6 +50,7 @@ Pattern: `{type}-zetdo-{env}-{region}` (region: `weu` = westeurope)
 | Log Analytics | `log-` | `log-zetdo-dev-weu` |
 | Managed Identity | `id-` | `id-zetdo-dev-weu` |
 | Storage Account | `stzetdo` | `stzetdotfstateweu` (no hyphens) |
+| Key Vault | `kv-` | `kv-zetdo-dev-weu` |
 | Container Registry | `crzetdo` | `crzetdoweu` (no hyphens) |
 
 ## Environment Mapping
@@ -93,11 +95,13 @@ When creating new modules, follow these conventions:
 ## Critical Constraints
 
 - CosmosDB free tier: only 1 per subscription (assigned to dev)
+- CosmosDB access: managed identity (no keys), `Cosmos DB Built-in Data Contributor` role at environment level
 - Container App image: managed externally, protected by `lifecycle { ignore_changes }`
+- Key Vault: RBAC authorization, purge protection enabled for prod only
 - Static Web App: deployed externally via `api_key` deployment token
 - ACR: shared Basic SKU in dev subscription
 - Providers in environments use `resource_provider_registrations = "none"` (SP has RG-level Contributor only)
-- `Microsoft.App` explicitly registered in bootstrap; `Microsoft.Web` auto-registered by AzureRM provider
+- `Microsoft.App` and `Microsoft.KeyVault` explicitly registered in seed script; `Microsoft.Web` auto-registered by AzureRM provider
 - GitHub repo: `ramonbrbs/zetdo-infra`
 
 ## GitHub Secrets

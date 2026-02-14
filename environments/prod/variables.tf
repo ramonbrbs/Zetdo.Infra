@@ -91,6 +91,13 @@ variable "cosmosdb_throughput" {
   default     = 400
 }
 
+# Key Vault variables
+variable "key_vault_purge_protection_enabled" {
+  description = "Enable Key Vault purge protection (recommended for production)"
+  type        = bool
+  default     = false
+}
+
 # Static Web App variables
 variable "static_web_app_sku_tier" {
   description = "SKU tier for Static Web App (Free or Standard)"

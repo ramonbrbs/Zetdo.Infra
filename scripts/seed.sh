@@ -167,6 +167,8 @@ echo "=== Registering resource providers ==="
 for SUB_ID in "$DEV_SUBSCRIPTION_ID" "$SIT_SUBSCRIPTION_ID" "$PROD_SUBSCRIPTION_ID"; do
   az provider register --subscription "$SUB_ID" --namespace Microsoft.App --only-show-errors
   echo "  Microsoft.App registered in subscription ${SUB_ID:0:8}..."
+  az provider register --subscription "$SUB_ID" --namespace Microsoft.KeyVault --only-show-errors
+  echo "  Microsoft.KeyVault registered in subscription ${SUB_ID:0:8}..."
 done
 
 # =============================================================================

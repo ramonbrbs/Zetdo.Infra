@@ -22,6 +22,9 @@ cosmosdb_free_tier_enabled = false
 cosmosdb_enable_serverless = true
 cosmosdb_throughput        = 400
 
+# Key Vault - purge protection enabled for prod
+key_vault_purge_protection_enabled = true
+
 # Static Web App - Standard tier for prod (SLA, custom domains, etc.)
 static_web_app_sku_tier = "Standard"
 static_web_app_sku_size = "Standard"

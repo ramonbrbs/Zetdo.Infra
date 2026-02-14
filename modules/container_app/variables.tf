@@ -71,10 +71,9 @@ variable "cosmosdb_endpoint" {
   default     = ""
 }
 
-variable "cosmosdb_primary_key" {
-  description = "CosmosDB account primary key"
+variable "key_vault_uri" {
+  description = "Key Vault URI"
   type        = string
-  sensitive   = true
   default     = ""
 }
 

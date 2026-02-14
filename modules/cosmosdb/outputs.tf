@@ -13,14 +13,16 @@ output "endpoint" {
   value       = azurerm_cosmosdb_account.this.endpoint
 }
 
+# Deprecated: use managed identity authentication instead of key-based access
 output "primary_key" {
-  description = "CosmosDB account primary key"
+  description = "CosmosDB account primary key (deprecated: use managed identity)"
   value       = azurerm_cosmosdb_account.this.primary_key
   sensitive   = true
 }
 
+# Deprecated: use managed identity authentication instead of connection strings
 output "primary_sql_connection_string" {
-  description = "CosmosDB primary SQL connection string"
+  description = "CosmosDB primary SQL connection string (deprecated: use managed identity)"
   value       = azurerm_cosmosdb_account.this.primary_sql_connection_string
   sensitive   = true
 }

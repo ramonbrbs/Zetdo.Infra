@@ -38,3 +38,13 @@ output "static_web_app_api_key" {
   value       = module.static_web_app.api_key
   sensitive   = true
 }
+
+output "key_vault_name" {
+  description = "Key Vault name"
+  value       = module.key_vault.key_vault_name
+}
+
+output "key_vault_uri" {
+  description = "Key Vault URI"
+  value       = module.key_vault.key_vault_uri
+}

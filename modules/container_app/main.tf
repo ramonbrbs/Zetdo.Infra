@@ -73,20 +73,20 @@ resource "azurerm_container_app" "this" {
       }
 
       env {
+        name  = "AZURE_CLIENT_ID"
+        value = azurerm_user_assigned_identity.container_app.client_id
+      }
+
+      env {
         name  = "COSMOSDB_ENDPOINT"
         value = var.cosmosdb_endpoint
       }
 
       env {
-        name        = "COSMOSDB_KEY"
-        secret_name = "cosmosdb-key"
+        name  = "KEY_VAULT_URI"
+        value = var.key_vault_uri
       }
     }
-  }
-
-  secret {
-    name  = "cosmosdb-key"
-    value = var.cosmosdb_primary_key
   }
 
   ingress {

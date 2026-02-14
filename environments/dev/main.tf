@@ -50,6 +50,22 @@ module "cosmosdb" {
 }
 
 # =============================================================================
+# Key Vault
+# =============================================================================
+module "key_vault" {
+  source = "../../modules/key_vault"
+
+  environment         = var.environment
+  location            = module.resource_group.location
+  location_short      = var.location_short
+  resource_group_name = module.resource_group.name
+
+  purge_protection_enabled = var.key_vault_purge_protection_enabled
+
+  tags = local.tags
+}
+
+# =============================================================================
 # Container App
 # =============================================================================
 module "container_app" {
@@ -68,7 +84,7 @@ module "container_app" {
   target_port                     = var.container_target_port
   log_retention_days              = var.log_retention_days
   cosmosdb_endpoint               = module.cosmosdb.endpoint
-  cosmosdb_primary_key            = module.cosmosdb.primary_key
+  key_vault_uri                   = module.key_vault.key_vault_uri
 
   tags = local.tags
 }
@@ -96,6 +112,26 @@ resource "azurerm_role_assignment" "container_app_acr_pull" {
   provider             = azurerm.shared
   scope                = var.acr_id
   role_definition_name = "AcrPull"
+  principal_id         = module.container_app.managed_identity_principal_id
+}
+
+# =============================================================================
+# CosmosDB Data Contributor Role Assignment (managed identity access)
+# =============================================================================
+resource "azurerm_cosmosdb_sql_role_assignment" "container_app_data_contributor" {
+  resource_group_name = module.resource_group.name
+  account_name        = module.cosmosdb.account_name
+  role_definition_id  = "${module.cosmosdb.account_id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+  principal_id        = module.container_app.managed_identity_principal_id
+  scope               = module.cosmosdb.account_id
+}
+
+# =============================================================================
+# Key Vault Secrets User Role Assignment
+# =============================================================================
+resource "azurerm_role_assignment" "container_app_key_vault_secrets_user" {
+  scope                = module.key_vault.key_vault_id
+  role_definition_name = "Key Vault Secrets User"
   principal_id         = module.container_app.managed_identity_principal_id
 }
 
