@@ -30,6 +30,12 @@ variable "purge_protection_enabled" {
   default     = false
 }
 
+variable "firebase_credential_json" {
+  description = "Firebase credential JSON value for Key Vault secret"
+  type        = string
+  sensitive   = true
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

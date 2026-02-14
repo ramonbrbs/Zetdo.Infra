@@ -21,3 +21,12 @@ resource "azurerm_key_vault" "this" {
 
   tags = var.tags
 }
+
+# =============================================================================
+# Key Vault Secrets
+# =============================================================================
+resource "azurerm_key_vault_secret" "firebase_credential_json" {
+  name         = "User--Firebase--CredentialJson"
+  value        = var.firebase_credential_json
+  key_vault_id = azurerm_key_vault.this.id
+}

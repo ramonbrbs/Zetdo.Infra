@@ -92,6 +92,12 @@ variable "cosmosdb_throughput" {
 }
 
 # Key Vault variables
+variable "firebase_credential_json" {
+  description = "Firebase credential JSON for Key Vault secret"
+  type        = string
+  sensitive   = true
+}
+
 variable "key_vault_purge_protection_enabled" {
   description = "Enable Key Vault purge protection (recommended for production)"
   type        = bool

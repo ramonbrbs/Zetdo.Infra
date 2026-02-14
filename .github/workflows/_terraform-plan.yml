@@ -26,6 +26,22 @@ jobs:
       TF_WORKING_DIR: environments/${{ inputs.environment }}
 
     steps:
+      - name: Validate Secrets
+        run: |
+          missing=()
+          [ -z "${{ secrets.AZURE_CLIENT_ID }}" ] && missing+=("AZURE_CLIENT_ID")
+          [ -z "${{ secrets.AZURE_TENANT_ID }}" ] && missing+=("AZURE_TENANT_ID")
+          [ -z "${{ secrets.AZURE_SHARED_SUBSCRIPTION_ID }}" ] && missing+=("AZURE_SHARED_SUBSCRIPTION_ID")
+          if [ "${{ inputs.environment }}" != "shared" ]; then
+            [ -z "${{ secrets.AZURE_ENV_SUBSCRIPTION_ID }}" ] && missing+=("AZURE_ENV_SUBSCRIPTION_ID")
+            [ -z "${{ secrets.FIREBASE_CREDENTIAL_JSON }}" ] && missing+=("FIREBASE_CREDENTIAL_JSON")
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+          echo "All required secrets are configured."
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -47,7 +63,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -input=false -no-color -var-file=terraform.tfvars -out=tfplan
+        run: terraform plan -input=false -no-color -var-file=terraform.tfvars -var="firebase_credential_json=${{ secrets.FIREBASE_CREDENTIAL_JSON }}" -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Upload Plan Artifact
