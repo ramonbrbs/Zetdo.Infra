@@ -14,7 +14,7 @@ container_cpu          = 0.25
 container_memory       = "0.5Gi"
 container_min_replicas = 0
 container_max_replicas = 3
-container_target_port  = 80
+container_target_port  = 8080
 log_retention_days     = 90
 
 # CosmosDB - SERVERLESS (pay-per-use)
