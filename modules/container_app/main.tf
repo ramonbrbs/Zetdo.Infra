@@ -74,7 +74,7 @@ resource "azurerm_container_app" "this" {
 
       env {
         name  = "ASPNETCORE_ENVIRONMENT"
-        value = var.environment == "prod" ? "Production" : var.environment
+        value = var.environment == "prod" ? "Production" : title(var.environment)
       }
 
       env {
@@ -88,7 +88,7 @@ resource "azurerm_container_app" "this" {
       }
 
       env {
-        name  = "KEY_VAULT_URI"
+        name  = "KeyVault__Url"
         value = var.key_vault_uri
       }
     }
