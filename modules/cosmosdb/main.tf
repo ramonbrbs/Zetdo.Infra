@@ -57,3 +57,25 @@ resource "azurerm_cosmosdb_sql_container" "user_profiles" {
   database_name       = azurerm_cosmosdb_sql_database.this.name
   partition_key_paths = ["/id"]
 }
+
+# =============================================================================
+# CosmosDB SQL Database - CompanyDB
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "company_db" {
+  name                = "CompanyDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - Companies
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "companies" {
+  name                = "Companies"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.company_db.name
+  partition_key_paths = ["/id"]
+}
