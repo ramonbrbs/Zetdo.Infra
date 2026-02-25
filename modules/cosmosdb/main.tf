@@ -79,3 +79,11 @@ resource "azurerm_cosmosdb_sql_container" "companies" {
   database_name       = azurerm_cosmosdb_sql_database.company_db.name
   partition_key_paths = ["/id"]
 }
+
+resource "azurerm_cosmosdb_sql_container" "company_users" {
+  name                = "CompanyUsers"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.company_db.name
+  partition_key_paths = ["/id"]
+}
