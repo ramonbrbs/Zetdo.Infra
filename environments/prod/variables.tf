@@ -98,6 +98,12 @@ variable "firebase_credential_json" {
   sensitive   = true
 }
 
+variable "password_hash" {
+  description = "Password hash for Key Vault secret"
+  type        = string
+  sensitive   = true
+}
+
 variable "key_vault_purge_protection_enabled" {
   description = "Enable Key Vault purge protection (recommended for production)"
   type        = bool

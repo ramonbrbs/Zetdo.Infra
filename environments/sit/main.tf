@@ -63,6 +63,7 @@ module "key_vault" {
   purge_protection_enabled = var.key_vault_purge_protection_enabled
 
   firebase_credential_json = var.firebase_credential_json
+  password_hash            = var.password_hash
 
   tags = local.tags
 }

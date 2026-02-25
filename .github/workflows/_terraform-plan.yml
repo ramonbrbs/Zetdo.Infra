@@ -33,6 +33,7 @@ jobs:
           CHECK_SHARED_SUB: ${{ secrets.AZURE_SHARED_SUBSCRIPTION_ID }}
           CHECK_ENV_SUB: ${{ secrets.AZURE_ENV_SUBSCRIPTION_ID }}
           CHECK_FIREBASE: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
+          CHECK_PASSWORD_HASH: ${{ secrets.PASSWORD_HASH }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           missing=()
@@ -42,6 +43,7 @@ jobs:
           if [ "$ENVIRONMENT" != "shared" ]; then
             [ -z "$CHECK_ENV_SUB" ] && missing+=("AZURE_ENV_SUBSCRIPTION_ID")
             [ -z "$CHECK_FIREBASE" ] && missing+=("FIREBASE_CREDENTIAL_JSON")
+            [ -z "$CHECK_PASSWORD_HASH" ] && missing+=("PASSWORD_HASH")
           fi
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${missing[*]}"
@@ -72,6 +74,7 @@ jobs:
         id: plan
         env:
           TF_VAR_firebase_credential_json: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
+          TF_VAR_password_hash: ${{ secrets.PASSWORD_HASH }}
         run: terraform plan -input=false -no-color -var-file=terraform.tfvars -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 

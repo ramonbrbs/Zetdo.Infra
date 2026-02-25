@@ -36,6 +36,12 @@ variable "firebase_credential_json" {
   sensitive   = true
 }
 
+variable "password_hash" {
+  description = "Password hash value for Key Vault secret"
+  type        = string
+  sensitive   = true
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

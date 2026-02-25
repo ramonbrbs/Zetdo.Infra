@@ -41,3 +41,11 @@ resource "azurerm_key_vault_secret" "firebase_credential_json" {
 
   depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
 }
+
+resource "azurerm_key_vault_secret" "password_hash" {
+  name         = "User--PasswordHash"
+  value        = var.password_hash
+  key_vault_id = azurerm_key_vault.this.id
+
+  depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
+}
