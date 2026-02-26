@@ -70,20 +70,40 @@ resource "azurerm_cosmosdb_sql_database" "company_db" {
 }
 
 # =============================================================================
-# CosmosDB SQL Container - Companies
+# CosmosDB SQL Container - Companies (single-container design)
+# Stores Company and CompanyUser documents co-located by companyId.
+# Partition key: /companyId
+#   - Company docs:     companyId == id (self-referential)
+#   - CompanyUser docs: companyId == parent company id
+# Discriminator field: /type ("Company" | "CompanyUser")
 # =============================================================================
 resource "azurerm_cosmosdb_sql_container" "companies" {
   name                = "Companies"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = azurerm_cosmosdb_sql_database.company_db.name
-  partition_key_paths = ["/id"]
-}
+  partition_key_paths = ["/companyId"]
 
-resource "azurerm_cosmosdb_sql_container" "company_users" {
-  name                = "CompanyUsers"
-  resource_group_name = var.resource_group_name
-  account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.company_db.name
-  partition_key_paths = ["/id"]
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+  }
 }
