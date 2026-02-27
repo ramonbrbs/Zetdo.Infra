@@ -110,6 +110,13 @@ variable "key_vault_purge_protection_enabled" {
   default     = false
 }
 
+# Blob Storage variables
+variable "blob_storage_replication_type" {
+  description = "Storage account replication type (LRS, GRS, ZRS, RAGRS)"
+  type        = string
+  default     = "LRS"
+}
+
 # Static Web App variables
 variable "static_web_app_sku_tier" {
   description = "SKU tier for Static Web App (Free or Standard)"

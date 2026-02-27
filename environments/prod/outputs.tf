@@ -48,3 +48,13 @@ output "key_vault_uri" {
   description = "Key Vault URI"
   value       = module.key_vault.key_vault_uri
 }
+
+output "blob_storage_account_name" {
+  description = "Blob storage account name"
+  value       = module.blob_storage.storage_account_name
+}
+
+output "blob_storage_endpoint" {
+  description = "Primary blob storage endpoint"
+  value       = module.blob_storage.primary_blob_endpoint
+}

@@ -28,3 +28,6 @@ key_vault_purge_protection_enabled = false
 # Static Web App - Free tier for sit
 static_web_app_sku_tier = "Free"
 static_web_app_sku_size = "Free"
+
+# Blob Storage
+blob_storage_replication_type = "LRS"

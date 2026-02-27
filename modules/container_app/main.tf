@@ -91,6 +91,11 @@ resource "azurerm_container_app" "this" {
         name  = "KeyVault__Url"
         value = var.key_vault_uri
       }
+
+      env {
+        name  = "AZURE_BLOB_ENDPOINT"
+        value = var.blob_storage_endpoint
+      }
     }
   }
 

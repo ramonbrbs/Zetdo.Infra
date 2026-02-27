@@ -88,6 +88,7 @@ module "container_app" {
   log_retention_days              = var.log_retention_days
   cosmosdb_endpoint               = module.cosmosdb.endpoint
   key_vault_uri                   = module.key_vault.key_vault_uri
+  blob_storage_endpoint           = module.blob_storage.primary_blob_endpoint
 
   tags = local.tags
 }
@@ -104,6 +105,21 @@ module "static_web_app" {
   resource_group_name = module.resource_group.name
   sku_tier            = var.static_web_app_sku_tier
   sku_size            = var.static_web_app_sku_size
+
+  tags = local.tags
+}
+
+# =============================================================================
+# Blob Storage
+# =============================================================================
+module "blob_storage" {
+  source = "../../modules/blob_storage"
+
+  environment              = var.environment
+  location                 = module.resource_group.location
+  location_short           = var.location_short
+  resource_group_name      = module.resource_group.name
+  account_replication_type = var.blob_storage_replication_type
 
   tags = local.tags
 }
@@ -135,6 +151,15 @@ resource "azurerm_cosmosdb_sql_role_assignment" "container_app_data_contributor"
 resource "azurerm_role_assignment" "container_app_key_vault_secrets_user" {
   scope                = module.key_vault.key_vault_id
   role_definition_name = "Key Vault Secrets User"
+  principal_id         = module.container_app.managed_identity_principal_id
+}
+
+# =============================================================================
+# Blob Storage Data Contributor Role Assignment (managed identity upload access)
+# =============================================================================
+resource "azurerm_role_assignment" "container_app_blob_data_contributor" {
+  scope                = module.blob_storage.storage_account_id
+  role_definition_name = "Storage Blob Data Contributor"
   principal_id         = module.container_app.managed_identity_principal_id
 }
 

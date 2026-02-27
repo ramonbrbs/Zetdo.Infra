@@ -77,6 +77,12 @@ variable "key_vault_uri" {
   default     = ""
 }
 
+variable "blob_storage_endpoint" {
+  description = "Primary blob storage endpoint URL"
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

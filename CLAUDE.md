@@ -3,6 +3,7 @@
 ## Project Overview
 Terraform infrastructure-as-code for the Zetdo SaaS application on Azure.
 Three environments (dev, sit, prod) with Container Apps, CosmosDB, Key Vault, and Static Web App per environment.
+The infrastructure changes are deployed using Github Actions.
 
 ## Architecture
 - **Multi-subscription**: Each environment can be in a different Azure subscription. Shared resources (state, ACR) live in the dev subscription.
