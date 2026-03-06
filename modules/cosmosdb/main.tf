@@ -107,3 +107,53 @@ resource "azurerm_cosmosdb_sql_container" "companies" {
     }
   }
 }
+
+# =============================================================================
+# CosmosDB SQL Database - CustomerDB
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "customer_db" {
+  name                = "CustomerDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - Customers (single-container design)
+# Stores Customer and child entities co-located by customerId.
+# Partition key: /customerId
+#   - Customer docs:           customerId == id (self-referential)
+#   - Child entity docs:       customerId == parent customer id
+# Discriminator field: /type ("Customer", "CustomerAttachment", etc.)
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "customers" {
+  name                = "Customers"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.customer_db.name
+  partition_key_paths = ["/customerId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/customerId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+  }
+}

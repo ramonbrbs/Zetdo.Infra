@@ -36,3 +36,8 @@ output "company_database_name" {
   description = "CosmosDB CompanyDB database name"
   value       = azurerm_cosmosdb_sql_database.company_db.name
 }
+
+output "customer_database_name" {
+  description = "CosmosDB CustomerDB database name"
+  value       = azurerm_cosmosdb_sql_database.customer_db.name
+}
