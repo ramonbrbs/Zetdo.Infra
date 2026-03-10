@@ -157,3 +157,53 @@ resource "azurerm_cosmosdb_sql_container" "customers" {
     }
   }
 }
+
+# =============================================================================
+# CosmosDB SQL Database - OfferingDB
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "offering_db" {
+  name                = "OfferingDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - Offerings (single-container design)
+# Stores Service and Product documents co-located by offeringId.
+# Partition key: /offeringId
+#   - Service docs: offeringId == id (computed property)
+#   - Product docs: offeringId == id (computed property)
+# Discriminator field: /type ("Service" | "Product")
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "offerings" {
+  name                = "Offerings"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.offering_db.name
+  partition_key_paths = ["/offeringId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/offeringId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+  }
+}
