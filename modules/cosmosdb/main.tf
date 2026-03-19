@@ -207,3 +207,52 @@ resource "azurerm_cosmosdb_sql_container" "offerings" {
     }
   }
 }
+
+# =============================================================================
+# CosmosDB SQL Database - SaleDB
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "sale_db" {
+  name                = "SaleDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - Sales (single-container design)
+# Stores Sale documents partitioned by saleId.
+# Partition key: /saleId
+#   - Sale docs: saleId == id (self-referential)
+# Discriminator field: /type ("Sale")
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "sales" {
+  name                = "Sales"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.sale_db.name
+  partition_key_paths = ["/saleId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/saleId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+  }
+}
