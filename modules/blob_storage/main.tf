@@ -29,3 +29,9 @@ resource "azurerm_storage_container" "company_logos" {
   storage_account_id    = azurerm_storage_account.this.id
   container_access_type = "blob"
 }
+
+resource "azurerm_storage_container" "offering_images" {
+  name                  = "offering-images"
+  storage_account_id    = azurerm_storage_account.this.id
+  container_access_type = "blob"
+}
