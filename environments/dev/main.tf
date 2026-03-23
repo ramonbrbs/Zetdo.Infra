@@ -38,13 +38,14 @@ module "resource_group" {
 module "cosmosdb" {
   source = "../../modules/cosmosdb"
 
-  environment         = var.environment
-  location            = module.resource_group.location
-  location_short      = var.location_short
-  resource_group_name = module.resource_group.name
-  free_tier_enabled   = var.cosmosdb_free_tier_enabled
-  enable_serverless   = var.cosmosdb_enable_serverless
-  throughput          = var.cosmosdb_throughput
+  environment          = var.environment
+  location             = module.resource_group.location
+  location_short       = var.location_short
+  resource_group_name  = module.resource_group.name
+  free_tier_enabled    = var.cosmosdb_free_tier_enabled
+  enable_serverless    = var.cosmosdb_enable_serverless
+  throughput           = var.cosmosdb_throughput
+  single_database_mode = var.cosmosdb_single_database_mode
 
   tags = local.tags
 }

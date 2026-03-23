@@ -91,6 +91,12 @@ variable "cosmosdb_throughput" {
   default     = 400
 }
 
+variable "cosmosdb_single_database_mode" {
+  description = "When true, all containers share a single database (cost optimization)"
+  type        = bool
+  default     = false
+}
+
 # Key Vault variables
 variable "firebase_credential_json" {
   description = "Firebase credential JSON for Key Vault secret"

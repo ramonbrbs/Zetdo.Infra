@@ -35,9 +35,23 @@ resource "azurerm_cosmosdb_account" "this" {
 }
 
 # =============================================================================
-# CosmosDB SQL Database
+# Consolidated Database (single_database_mode = true)
+# All containers share one database to stay within free tier RU/s allowance.
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "consolidated" {
+  count               = var.single_database_mode ? 1 : 0
+  name                = "ZetdoDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Database - UserDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "this" {
+  count               = var.single_database_mode ? 0 : 1
   name                = "UserDB"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
@@ -48,20 +62,21 @@ resource "azurerm_cosmosdb_sql_database" "this" {
 }
 
 # =============================================================================
-# CosmosDB SQL Container
+# CosmosDB SQL Container - UserProfiles
 # =============================================================================
 resource "azurerm_cosmosdb_sql_container" "user_profiles" {
   name                = "UserProfiles"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.this.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.this[0].name
   partition_key_paths = ["/id"]
 }
 
 # =============================================================================
-# CosmosDB SQL Database - CompanyDB
+# CosmosDB SQL Database - CompanyDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "company_db" {
+  count               = var.single_database_mode ? 0 : 1
   name                = "CompanyDB"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
@@ -81,7 +96,7 @@ resource "azurerm_cosmosdb_sql_container" "companies" {
   name                = "Companies"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.company_db.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.company_db[0].name
   partition_key_paths = ["/companyId"]
 
   indexing_policy {
@@ -109,9 +124,10 @@ resource "azurerm_cosmosdb_sql_container" "companies" {
 }
 
 # =============================================================================
-# CosmosDB SQL Database - CustomerDB
+# CosmosDB SQL Database - CustomerDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "customer_db" {
+  count               = var.single_database_mode ? 0 : 1
   name                = "CustomerDB"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
@@ -131,7 +147,7 @@ resource "azurerm_cosmosdb_sql_container" "customers" {
   name                = "Customers"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.customer_db.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.customer_db[0].name
   partition_key_paths = ["/customerId"]
 
   indexing_policy {
@@ -159,9 +175,10 @@ resource "azurerm_cosmosdb_sql_container" "customers" {
 }
 
 # =============================================================================
-# CosmosDB SQL Database - OfferingDB
+# CosmosDB SQL Database - OfferingDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "offering_db" {
+  count               = var.single_database_mode ? 0 : 1
   name                = "OfferingDB"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
@@ -181,7 +198,7 @@ resource "azurerm_cosmosdb_sql_container" "offerings" {
   name                = "Offerings"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.offering_db.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.offering_db[0].name
   partition_key_paths = ["/offeringId"]
 
   indexing_policy {
@@ -209,9 +226,10 @@ resource "azurerm_cosmosdb_sql_container" "offerings" {
 }
 
 # =============================================================================
-# CosmosDB SQL Database - SaleDB
+# CosmosDB SQL Database - SaleDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "sale_db" {
+  count               = var.single_database_mode ? 0 : 1
   name                = "SaleDB"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
@@ -230,7 +248,7 @@ resource "azurerm_cosmosdb_sql_container" "sales" {
   name                = "Sales"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.sale_db.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.sale_db[0].name
   partition_key_paths = ["/saleId"]
 
   indexing_policy {

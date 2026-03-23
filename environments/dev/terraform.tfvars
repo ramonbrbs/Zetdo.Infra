@@ -18,9 +18,12 @@ container_target_port  = 8080
 log_retention_days     = 30
 
 # CosmosDB - FREE TIER (only 1 per subscription!)
-cosmosdb_free_tier_enabled = true
-cosmosdb_enable_serverless = false
-cosmosdb_throughput        = 400
+# single_database_mode consolidates all containers into one database (ZetdoDB)
+# so total throughput stays at 400 RU/s, fully covered by free tier.
+cosmosdb_free_tier_enabled    = true
+cosmosdb_enable_serverless    = false
+cosmosdb_throughput           = 400
+cosmosdb_single_database_mode = true
 
 # Key Vault
 key_vault_purge_protection_enabled = false

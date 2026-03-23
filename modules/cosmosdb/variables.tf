@@ -36,6 +36,12 @@ variable "throughput" {
   default     = 400
 }
 
+variable "single_database_mode" {
+  description = "When true, all containers share a single database (cost optimization for dev)"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
