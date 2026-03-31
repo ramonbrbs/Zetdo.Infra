@@ -322,5 +322,16 @@ resource "azurerm_cosmosdb_sql_container" "calendars" {
         order = "ascending"
       }
     }
+
+    composite_index {
+      index {
+        path  = "/isDefault"
+        order = "descending"
+      }
+      index {
+        path  = "/name"
+        order = "ascending"
+      }
+    }
   }
 }
