@@ -274,3 +274,53 @@ resource "azurerm_cosmosdb_sql_container" "sales" {
     }
   }
 }
+
+# =============================================================================
+# CosmosDB SQL Database - CalendarDB (multi-database mode only)
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "calendar_db" {
+  count               = var.single_database_mode ? 0 : 1
+  name                = "CalendarDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - Calendars (single-container design)
+# Stores Calendar documents partitioned by calendarId.
+# Partition key: /calendarId
+#   - Calendar docs: calendarId == id (self-referential)
+# Discriminator field: /type ("Calendar")
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "calendars" {
+  name                = "Calendars"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.calendar_db[0].name
+  partition_key_paths = ["/calendarId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/calendarId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+  }
+}

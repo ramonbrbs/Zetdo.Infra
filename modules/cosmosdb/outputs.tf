@@ -46,3 +46,13 @@ output "offering_database_name" {
   description = "CosmosDB OfferingDB database name (or ZetdoDB in single database mode)"
   value       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.offering_db[0].name
 }
+
+output "sale_database_name" {
+  description = "CosmosDB SaleDB database name (or ZetdoDB in single database mode)"
+  value       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.sale_db[0].name
+}
+
+output "calendar_database_name" {
+  description = "CosmosDB CalendarDB database name (or ZetdoDB in single database mode)"
+  value       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.calendar_db[0].name
+}
