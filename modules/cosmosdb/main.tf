@@ -137,18 +137,17 @@ resource "azurerm_cosmosdb_sql_database" "customer_db" {
 
 # =============================================================================
 # CosmosDB SQL Container - Customers (single-container design)
-# Stores Customer and child entities co-located by customerId.
-# Partition key: /customerId
-#   - Customer docs:           customerId == id (self-referential)
-#   - Child entity docs:       customerId == parent customer id
-# Discriminator field: /type ("Customer", "CustomerAttachment", etc.)
+# Stores Customer documents partitioned by companyId.
+# Partition key: /companyId
+#   - Customer docs: companyId == owning company id
+# Discriminator field: /type ("Customer")
 # =============================================================================
 resource "azurerm_cosmosdb_sql_container" "customers" {
   name                = "Customers"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.customer_db[0].name
-  partition_key_paths = ["/customerId"]
+  partition_key_paths = ["/companyId"]
 
   indexing_policy {
     indexing_mode = "consistent"
@@ -163,8 +162,19 @@ resource "azurerm_cosmosdb_sql_container" "customers" {
 
     composite_index {
       index {
-        path  = "/customerId"
+        path  = "/companyId"
         order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+
+    composite_index {
+      index {
+        path  = "/createdAt"
+        order = "descending"
       }
       index {
         path  = "/type"
@@ -188,18 +198,19 @@ resource "azurerm_cosmosdb_sql_database" "offering_db" {
 
 # =============================================================================
 # CosmosDB SQL Container - Offerings (single-container design)
-# Stores Service and Product documents co-located by offeringId.
-# Partition key: /offeringId
-#   - Service docs: offeringId == id (computed property)
-#   - Product docs: offeringId == id (computed property)
-# Discriminator field: /type ("Service" | "Product")
+# Stores Service, Product, and UnitOfMeasure documents partitioned by companyId.
+# Partition key: /companyId
+#   - Service docs: companyId == owning company id
+#   - Product docs: companyId == owning company id
+#   - UnitOfMeasure docs: companyId == owning company id
+# Discriminator field: /type ("Service" | "Product" | "UnitOfMeasure")
 # =============================================================================
 resource "azurerm_cosmosdb_sql_container" "offerings" {
   name                = "Offerings"
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.offering_db[0].name
-  partition_key_paths = ["/offeringId"]
+  partition_key_paths = ["/companyId"]
 
   indexing_policy {
     indexing_mode = "consistent"
@@ -214,8 +225,19 @@ resource "azurerm_cosmosdb_sql_container" "offerings" {
 
     composite_index {
       index {
-        path  = "/offeringId"
+        path  = "/companyId"
         order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+
+    composite_index {
+      index {
+        path  = "/createdAt"
+        order = "descending"
       }
       index {
         path  = "/type"
@@ -239,9 +261,9 @@ resource "azurerm_cosmosdb_sql_database" "sale_db" {
 
 # =============================================================================
 # CosmosDB SQL Container - Sales (single-container design)
-# Stores Sale documents partitioned by saleId.
-# Partition key: /saleId
-#   - Sale docs: saleId == id (self-referential)
+# Stores Sale documents partitioned by companyId.
+# Partition key: /companyId
+#   - Sale docs: companyId == owning company id
 # Discriminator field: /type ("Sale")
 # =============================================================================
 resource "azurerm_cosmosdb_sql_container" "sales" {
@@ -249,7 +271,7 @@ resource "azurerm_cosmosdb_sql_container" "sales" {
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.sale_db[0].name
-  partition_key_paths = ["/saleId"]
+  partition_key_paths = ["/companyId"]
 
   indexing_policy {
     indexing_mode = "consistent"
@@ -264,11 +286,33 @@ resource "azurerm_cosmosdb_sql_container" "sales" {
 
     composite_index {
       index {
-        path  = "/saleId"
+        path  = "/companyId"
         order = "ascending"
       }
       index {
         path  = "/type"
+        order = "ascending"
+      }
+    }
+
+    composite_index {
+      index {
+        path  = "/createdAt"
+        order = "descending"
+      }
+      index {
+        path  = "/status"
+        order = "ascending"
+      }
+    }
+
+    composite_index {
+      index {
+        path  = "/scheduledDate"
+        order = "ascending"
+      }
+      index {
+        path  = "/status"
         order = "ascending"
       }
     }
@@ -289,9 +333,9 @@ resource "azurerm_cosmosdb_sql_database" "calendar_db" {
 
 # =============================================================================
 # CosmosDB SQL Container - Calendars (single-container design)
-# Stores Calendar documents partitioned by calendarId.
-# Partition key: /calendarId
-#   - Calendar docs: calendarId == id (self-referential)
+# Stores Calendar documents partitioned by companyId.
+# Partition key: /companyId
+#   - Calendar docs: companyId == owning company id
 # Discriminator field: /type ("Calendar")
 # =============================================================================
 resource "azurerm_cosmosdb_sql_container" "calendars" {
@@ -299,7 +343,7 @@ resource "azurerm_cosmosdb_sql_container" "calendars" {
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.calendar_db[0].name
-  partition_key_paths = ["/calendarId"]
+  partition_key_paths = ["/companyId"]
 
   indexing_policy {
     indexing_mode = "consistent"
@@ -314,7 +358,7 @@ resource "azurerm_cosmosdb_sql_container" "calendars" {
 
     composite_index {
       index {
-        path  = "/calendarId"
+        path  = "/companyId"
         order = "ascending"
       }
       index {

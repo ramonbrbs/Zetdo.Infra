@@ -8,9 +8,10 @@ Provisions an Azure CosmosDB account with SQL API databases and containers for t
 - **Databases & Containers:**
   - `UserDB` → `UserProfiles` (partition key: `/id`)
   - `CompanyDB` → `Companies` (partition key: `/companyId`)
-  - `CustomerDB` → `Customers` (partition key: `/customerId`)
-  - `OfferingDB` → `Offerings` (partition key: `/offeringId`)
-  - `SaleDB` → `Sales` (partition key: `/saleId`)
+  - `CustomerDB` → `Customers` (partition key: `/companyId`)
+  - `OfferingDB` → `Offerings` (partition key: `/companyId`)
+  - `SaleDB` → `Sales` (partition key: `/companyId`)
+  - `CalendarDB` → `Calendars` (partition key: `/companyId`)
 
 All domain containers use a single-container design with a `/type` discriminator field and composite indexes on `(partitionKey, type)`.
 
