@@ -56,3 +56,8 @@ output "calendar_database_name" {
   description = "CosmosDB CalendarDB database name (or ZetdoDB in single database mode)"
   value       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.calendar_db[0].name
 }
+
+output "stock_database_name" {
+  description = "CosmosDB StockDB database name (or ZetdoDB in single database mode)"
+  value       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.stock_db[0].name
+}

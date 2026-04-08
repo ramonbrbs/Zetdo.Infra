@@ -379,3 +379,119 @@ resource "azurerm_cosmosdb_sql_container" "calendars" {
     }
   }
 }
+
+# =============================================================================
+# CosmosDB SQL Database - StockDB (multi-database mode only)
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "stock_db" {
+  count               = var.single_database_mode ? 0 : 1
+  name                = "StockDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - Stock (single-container design)
+# Stores Stock documents with embedded StockOperation history,
+# partitioned by companyId.
+# Partition key: /companyId
+#   - Stock docs: companyId == owning company id
+# Discriminator field: /type ("Stock")
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "stock" {
+  name                = "Stock"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.stock_db[0].name
+  partition_key_paths = ["/companyId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    # Base composite index: companyId + type discriminator
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+
+    # Stock list query: filter by type + isDeleted, sort/search by productName
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/productName"
+        order = "ascending"
+      }
+    }
+
+    # Stock list with negative filter
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/isNegative"
+        order = "ascending"
+      }
+      index {
+        path  = "/productName"
+        order = "ascending"
+      }
+    }
+
+    # Stock by product ID lookup
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/productId"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+    }
+  }
+}
