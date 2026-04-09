@@ -493,5 +493,49 @@ resource "azurerm_cosmosdb_sql_container" "stock" {
         order = "ascending"
       }
     }
+
+    # Inventory operation list query: filter by type + isDeleted, sort by createdAt
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/createdAt"
+        order = "descending"
+      }
+    }
+
+    # Inventory operation list with status filter
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/status"
+        order = "ascending"
+      }
+      index {
+        path  = "/createdAt"
+        order = "descending"
+      }
+    }
   }
 }
