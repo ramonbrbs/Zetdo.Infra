@@ -316,6 +316,22 @@ resource "azurerm_cosmosdb_sql_container" "sales" {
         order = "ascending"
       }
     }
+
+    # Report queries: WHERE status = 4 AND isDeleted = false AND completedAt >= @from AND completedAt <= @to ORDER BY completedAt ASC
+    composite_index {
+      index {
+        path  = "/completedAt"
+        order = "ascending"
+      }
+      index {
+        path  = "/status"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+    }
   }
 }
 
