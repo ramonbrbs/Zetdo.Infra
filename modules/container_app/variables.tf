@@ -83,6 +83,31 @@ variable "blob_storage_endpoint" {
   default     = ""
 }
 
+# -------- Attachments feature (REQ-INF-006) --------
+variable "attachments_storage_account_name" {
+  description = "Name of the storage account hosting the attachments container (e.g. stzetdodevweu)"
+  type        = string
+  default     = ""
+}
+
+variable "attachments_container_name" {
+  description = "Name of the blob container that stores attachment binaries"
+  type        = string
+  default     = "attachments"
+}
+
+variable "attachments_download_url_ttl_minutes" {
+  description = "TTL (minutes) for User Delegation Key SAS download URLs issued by the backend"
+  type        = number
+  default     = 5
+}
+
+variable "attachments_max_file_size_bytes" {
+  description = "Maximum allowed attachment size in bytes (default 25 MiB)"
+  type        = number
+  default     = 26214400
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

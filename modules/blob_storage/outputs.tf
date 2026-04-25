@@ -17,3 +17,8 @@ output "blob_container_name" {
   description = "Name of the blob container"
   value       = azurerm_storage_container.attachments.name
 }
+
+output "attachments_container_name" {
+  description = "Name of the attachments blob container"
+  value       = azurerm_storage_container.attachments.name
+}

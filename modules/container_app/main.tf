@@ -96,6 +96,27 @@ resource "azurerm_container_app" "this" {
         name  = "AZURE_BLOB_ENDPOINT"
         value = var.blob_storage_endpoint
       }
+
+      # -------- Attachments feature (REQ-INF-006) --------
+      env {
+        name  = "Attachments__StorageAccountName"
+        value = var.attachments_storage_account_name
+      }
+
+      env {
+        name  = "Attachments__ContainerName"
+        value = var.attachments_container_name
+      }
+
+      env {
+        name  = "Attachments__DownloadUrlTtlMinutes"
+        value = tostring(var.attachments_download_url_ttl_minutes)
+      }
+
+      env {
+        name  = "Attachments__MaxFileSizeBytes"
+        value = tostring(var.attachments_max_file_size_bytes)
+      }
     }
   }
 

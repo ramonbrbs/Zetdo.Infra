@@ -90,6 +90,10 @@ module "container_app" {
   key_vault_uri                   = module.key_vault.key_vault_uri
   blob_storage_endpoint           = module.blob_storage.primary_blob_endpoint
 
+  # Attachments feature (REQ-INF-006)
+  attachments_storage_account_name = module.blob_storage.storage_account_name
+  attachments_container_name       = module.blob_storage.attachments_container_name
+
   tags = local.tags
 }
 

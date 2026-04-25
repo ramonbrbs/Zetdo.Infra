@@ -73,6 +73,81 @@ resource "azurerm_cosmosdb_sql_container" "user_profiles" {
 }
 
 # =============================================================================
+# CosmosDB SQL Database - AttachmentDB (multi-database mode only)
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "attachment_db" {
+  count               = var.single_database_mode ? 0 : 1
+  name                = "AttachmentDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - Attachments (REQ-INF-004)
+# Stores attachment metadata documents partitioned by companyId.
+# Partition key: /companyId
+#   - Attachment docs: companyId == owning company id
+# Composite indexes support the two main query patterns:
+#   1. List by owner (ownerType + ownerId), most recent first
+#   2. List active (isDeleted = false) by company, most recent first
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "attachments" {
+  name                = "Attachments"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.attachment_db[0].name
+  partition_key_paths = ["/companyId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/ownerType"
+        order = "ascending"
+      }
+      index {
+        path  = "/ownerId"
+        order = "ascending"
+      }
+      index {
+        path  = "/uploadedAt"
+        order = "descending"
+      }
+    }
+
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/uploadedAt"
+        order = "descending"
+      }
+    }
+  }
+}
+
+# =============================================================================
 # CosmosDB SQL Database - CompanyDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "company_db" {

@@ -30,6 +30,14 @@ variable "blob_container_name" {
   default     = "attachments"
 }
 
+# REQ-INF-002: intentionally NOT exposed as a per-environment override.
+# All environments must keep the attachments container private.
+variable "attachment_container_access_type" {
+  description = "Access type for the attachments container. Always 'private' — do not override per environment."
+  type        = string
+  default     = "private"
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
