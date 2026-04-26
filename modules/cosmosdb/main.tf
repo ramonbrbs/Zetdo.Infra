@@ -144,6 +144,47 @@ resource "azurerm_cosmosdb_sql_container" "attachments" {
         order = "descending"
       }
     }
+
+    # Sort by uploadedAt ASC (Date — oldest first) within an owner.
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/ownerType"
+        order = "ascending"
+      }
+      index {
+        path  = "/ownerId"
+        order = "ascending"
+      }
+      index {
+        path  = "/uploadedAt"
+        order = "ascending"
+      }
+    }
+
+    # Sort by fileName within an owner. The composite index also supports
+    # the full-reverse direction, so it covers both A→Z and Z→A queries.
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/ownerType"
+        order = "ascending"
+      }
+      index {
+        path  = "/ownerId"
+        order = "ascending"
+      }
+      index {
+        path  = "/fileName"
+        order = "ascending"
+      }
+    }
   }
 }
 
