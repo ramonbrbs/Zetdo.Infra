@@ -94,6 +94,10 @@ module "container_app" {
   attachments_storage_account_name = module.blob_storage.storage_account_name
   attachments_container_name       = module.blob_storage.attachments_container_name
 
+  # Attachment Management feature (REQ-INF-204)
+  attachments_usage_cache_seconds = var.attachments_usage_cache_seconds
+  attachments_max_folder_depth    = var.attachments_max_folder_depth
+
   tags = local.tags
 }
 

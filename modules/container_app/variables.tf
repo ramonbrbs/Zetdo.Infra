@@ -108,6 +108,19 @@ variable "attachments_max_file_size_bytes" {
   default     = 26214400
 }
 
+# -------- Attachment Management feature (REQ-INF-202, REQ-INF-203) --------
+variable "attachments_usage_cache_seconds" {
+  description = "Attachments:UsageCacheSeconds — TTL of the per-company storage-usage in-memory cache."
+  type        = number
+  default     = 30
+}
+
+variable "attachments_max_folder_depth" {
+  description = "Attachments:MaxFolderDepth — maximum allowed folder nesting depth."
+  type        = number
+  default     = 8
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

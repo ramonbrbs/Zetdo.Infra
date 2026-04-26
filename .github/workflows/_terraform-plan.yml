@@ -78,6 +78,22 @@ jobs:
         run: terraform plan -input=false -no-color -var-file=terraform.tfvars -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 
+      # REQ-INF-205: assert no Cosmos SQL container is marked for replace/destroy.
+      # Index-policy changes must be applied in place; container recreation would
+      # destroy attachment metadata.
+      - name: Guardrail — no Cosmos container replacement
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform show -json tfplan \
+            | jq -e '
+                [
+                  .resource_changes[]
+                  | select(.type=="azurerm_cosmosdb_sql_container")
+                  | select(.change.actions | inside(["delete","create"]) or contains(["replace"]))
+                ] | length == 0
+              ' >/dev/null \
+            || { echo "::error::Cosmos container would be replaced. Aborting."; exit 1; }
+
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:

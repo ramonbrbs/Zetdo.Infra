@@ -123,6 +123,19 @@ variable "blob_storage_replication_type" {
   default     = "LRS"
 }
 
+# Attachment Management variables (REQ-INF-203, REQ-INF-204)
+variable "attachments_usage_cache_seconds" {
+  description = "Per-company storage-usage in-memory cache TTL (seconds)."
+  type        = number
+  default     = 30
+}
+
+variable "attachments_max_folder_depth" {
+  description = "Max attachment folder nesting depth."
+  type        = number
+  default     = 8
+}
+
 # Static Web App variables
 variable "static_web_app_sku_tier" {
   description = "SKU tier for Static Web App (Free or Standard)"

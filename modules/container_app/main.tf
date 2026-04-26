@@ -117,6 +117,17 @@ resource "azurerm_container_app" "this" {
         name  = "Attachments__MaxFileSizeBytes"
         value = tostring(var.attachments_max_file_size_bytes)
       }
+
+      # -------- Attachment Management feature (REQ-INF-202) --------
+      env {
+        name  = "Attachments__UsageCacheSeconds"
+        value = tostring(var.attachments_usage_cache_seconds)
+      }
+
+      env {
+        name  = "Attachments__MaxFolderDepth"
+        value = tostring(var.attachments_max_folder_depth)
+      }
     }
   }
 

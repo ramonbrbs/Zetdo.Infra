@@ -85,13 +85,17 @@ resource "azurerm_cosmosdb_sql_database" "attachment_db" {
 }
 
 # =============================================================================
-# CosmosDB SQL Container - Attachments (REQ-INF-004)
+# CosmosDB SQL Container - Attachments (REQ-INF-004, REQ-INF-201)
 # Stores attachment metadata documents partitioned by companyId.
 # Partition key: /companyId
 #   - Attachment docs: companyId == owning company id
-# Composite indexes support the two main query patterns:
+#   - Folder docs:     companyId == owning company id (co-located, type discriminator)
+# Composite indexes support:
 #   1. List by owner (ownerType + ownerId), most recent first
 #   2. List active (isDeleted = false) by company, most recent first
+#   3. Folder listing by parent + sibling-name uniqueness probes
+#   4. Attachment listing inside a folder by uploadedAt
+#   5. Storage-usage SUM aggregate over active attachments
 # =============================================================================
 resource "azurerm_cosmosdb_sql_container" "attachments" {
   name                = "Attachments"
@@ -111,6 +115,7 @@ resource "azurerm_cosmosdb_sql_container" "attachments" {
       path = "/_etag/?"
     }
 
+    # ---- Existing — parent spec (spec-20260425-architecture-attachments) ----
     composite_index {
       index {
         path  = "/companyId"
@@ -145,6 +150,68 @@ resource "azurerm_cosmosdb_sql_container" "attachments" {
       }
     }
 
+    # ---- New — this spec (spec-20260426-design-attachment-management) ----
+    # Folder listing by parent + sibling-name uniqueness probes.
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/parentFolderId"
+        order = "ascending"
+      }
+      index {
+        path  = "/name"
+        order = "ascending"
+      }
+    }
+
+    # Attachment listing inside a folder.
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/folderId"
+        order = "ascending"
+      }
+      index {
+        path  = "/uploadedAt"
+        order = "descending"
+      }
+    }
+
+    # Storage-usage SUM aggregate.
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/sizeInBytes"
+        order = "ascending"
+      }
+    }
+
+    # ---- Existing — parent spec (legacy, sort variants) ----
     # Sort by uploadedAt ASC (Date — oldest first) within an owner.
     composite_index {
       index {
