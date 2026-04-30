@@ -108,6 +108,19 @@ variable "attachments_max_file_size_bytes" {
   default     = 26214400
 }
 
+# -------- Appointments feature (Zet-16, Calendar.Domain) --------
+variable "appointment_cosmosdb_database_name" {
+  description = "AppointmentCosmosDb:DatabaseName — Cosmos database hosting the Appointments container."
+  type        = string
+  default     = ""
+}
+
+variable "appointment_cosmosdb_container_name" {
+  description = "AppointmentCosmosDb:ContainerName — Cosmos container holding Appointment aggregates."
+  type        = string
+  default     = ""
+}
+
 # -------- Attachment Management feature (REQ-INF-202, REQ-INF-203) --------
 variable "attachments_usage_cache_seconds" {
   description = "Attachments:UsageCacheSeconds — TTL of the per-company storage-usage in-memory cache."

@@ -128,6 +128,17 @@ resource "azurerm_container_app" "this" {
         name  = "Attachments__MaxFolderDepth"
         value = tostring(var.attachments_max_folder_depth)
       }
+
+      # -------- Appointments feature (Zet-16, Calendar.Domain) --------
+      env {
+        name  = "AppointmentCosmosDb__DatabaseName"
+        value = var.appointment_cosmosdb_database_name
+      }
+
+      env {
+        name  = "AppointmentCosmosDb__ContainerName"
+        value = var.appointment_cosmosdb_container_name
+      }
     }
   }
 

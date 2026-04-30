@@ -99,6 +99,10 @@ module "container_app" {
   attachments_usage_cache_seconds = var.attachments_usage_cache_seconds
   attachments_max_folder_depth    = var.attachments_max_folder_depth
 
+  # Appointments feature (Zet-16, Calendar.Domain)
+  appointment_cosmosdb_database_name  = module.cosmosdb.appointment_database_name
+  appointment_cosmosdb_container_name = module.cosmosdb.appointments_container_name
+
   tags = local.tags
 }
 

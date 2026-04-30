@@ -580,6 +580,46 @@ resource "azurerm_cosmosdb_sql_container" "calendars" {
 }
 
 # =============================================================================
+# CosmosDB SQL Container - Appointments (Zet-16, Calendar.Domain)
+# Stores Appointment documents partitioned by companyId.
+# Co-located with Calendars under CalendarDB (or ZetdoDB in single-database mode)
+# so the Calendar bounded context shares one database.
+# Partition key: /companyId
+#   - Appointment docs: companyId == owning company id
+# Discriminator field: /type ("Appointment")
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "appointments" {
+  name                = "Appointments"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.calendar_db[0].name
+  partition_key_paths = ["/companyId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+  }
+}
+
+# =============================================================================
 # CosmosDB SQL Database - StockDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "stock_db" {
