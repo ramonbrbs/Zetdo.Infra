@@ -778,3 +778,101 @@ resource "azurerm_cosmosdb_sql_container" "stock" {
     }
   }
 }
+
+# =============================================================================
+# CosmosDB SQL Database - BookingDB (multi-database mode only)
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "booking_db" {
+  count               = var.single_database_mode ? 0 : 1
+  name                = "BookingDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  throughput = var.enable_serverless ? null : var.throughput
+}
+
+# =============================================================================
+# CosmosDB SQL Container - OnlineOfferings (spec-zet-18, REQ-090..REQ-093)
+# Stores OnlineOffering documents partitioned by companyId. Single-container
+# design: type discriminator field is "OnlineOffering".
+# Partition key: /companyId
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "online_offerings" {
+  name                = "OnlineOfferings"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = var.single_database_mode ? azurerm_cosmosdb_sql_database.consolidated[0].name : azurerm_cosmosdb_sql_database.booking_db[0].name
+  partition_key_paths = ["/companyId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/_etag/?"
+    }
+
+    # Base composite index: companyId + type discriminator
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+    }
+
+    # List query: filter by status + isDeleted, sorted by createdAt desc
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/status"
+        order = "ascending"
+      }
+      index {
+        path  = "/createdAt"
+        order = "descending"
+      }
+    }
+
+    # Public-listing query: active offerings sorted by title
+    composite_index {
+      index {
+        path  = "/companyId"
+        order = "ascending"
+      }
+      index {
+        path  = "/type"
+        order = "ascending"
+      }
+      index {
+        path  = "/isDeleted"
+        order = "ascending"
+      }
+      index {
+        path  = "/status"
+        order = "ascending"
+      }
+      index {
+        path  = "/title"
+        order = "ascending"
+      }
+    }
+  }
+}
