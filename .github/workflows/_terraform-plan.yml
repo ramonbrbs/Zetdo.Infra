@@ -80,7 +80,10 @@ jobs:
 
       # REQ-INF-205: assert no Cosmos SQL container is marked for replace/destroy.
       # Index-policy changes must be applied in place; container recreation would
-      # destroy attachment metadata.
+      # destroy data. Pure ["create"] of a brand-new container is allowed.
+      # Replace surfaces in Terraform plan JSON as actions == ["delete","create"]
+      # (or contains "replace" in some provider versions). A standalone ["delete"]
+      # is also blocked — explicit container removal must be done out-of-band.
       - name: Guardrail — no Cosmos container replacement
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
@@ -89,10 +92,10 @@ jobs:
                 [
                   .resource_changes[]
                   | select(.type=="azurerm_cosmosdb_sql_container")
-                  | select(.change.actions | inside(["delete","create"]) or contains(["replace"]))
+                  | select(.change.actions | contains(["delete"]) or contains(["replace"]))
                 ] | length == 0
               ' >/dev/null \
-            || { echo "::error::Cosmos container would be replaced. Aborting."; exit 1; }
+            || { echo "::error::Cosmos container would be replaced or deleted. Aborting."; exit 1; }
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
