@@ -88,6 +88,9 @@ terraform validate
 - `environments/{dev,sit,prod}/` - Environment-specific Terraform configs
 - `.github/workflows/` - CI/CD pipelines
 
+## Runbooks
+- `docs/zet-19-bot-protection.md` — Manual Google Cloud / Firebase setup for reCAPTCHA v3 + Firebase App Check (Zet-19). Covers per-environment key creation, GitHub Actions secret wiring, App Check enforcement promotion, rotation, and rollback.
+
 ## Do NOT
 - Modify container image references in Terraform (they are managed externally)
 - Set throughput on CosmosDB SQL databases when using serverless accounts

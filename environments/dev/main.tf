@@ -65,6 +65,7 @@ module "key_vault" {
 
   firebase_credential_json = var.firebase_credential_json
   password_hash            = var.password_hash
+  recaptcha_secret         = var.recaptcha_secret
 
   tags = local.tags
 }
@@ -102,6 +103,9 @@ module "container_app" {
   # Appointments feature (Zet-16, Calendar.Domain)
   appointment_cosmosdb_database_name  = module.cosmosdb.appointment_database_name
   appointment_cosmosdb_container_name = module.cosmosdb.appointments_container_name
+
+  # Bot Protection (Zet-19) — Container App pulls latest version on revision restart.
+  recaptcha_secret_key_vault_id = module.key_vault.recaptcha_secret_versionless_id
 
   tags = local.tags
 }

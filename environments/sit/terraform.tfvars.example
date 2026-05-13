@@ -1,0 +1,42 @@
+# Dev Environment Configuration — example values
+# Copy to terraform.tfvars and fill in real values (or rely on TF_VAR_* env vars
+# wired through GitHub Actions for sensitive values).
+
+subscription_id        = "<dev-subscription-id>"
+shared_subscription_id = "<dev-subscription-id>"
+environment            = "dev"
+location_short         = "weu"
+
+# ACR (shared, in dev subscription) — values from bootstrap output
+acr_id           = "<acr-resource-id>"
+acr_login_server = "crzetdoweu.azurecr.io"
+
+# Container App
+container_image        = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+container_cpu          = 0.25
+container_memory       = "0.5Gi"
+container_min_replicas = 0
+container_max_replicas = 2
+container_target_port  = 8080
+log_retention_days     = 30
+
+# CosmosDB
+cosmosdb_free_tier_enabled    = true
+cosmosdb_enable_serverless    = false
+cosmosdb_throughput           = 400
+cosmosdb_single_database_mode = true
+
+# Key Vault
+key_vault_purge_protection_enabled = false
+
+# Static Web App
+static_web_app_sku_tier = "Free"
+static_web_app_sku_size = "Free"
+
+# Blob Storage
+blob_storage_replication_type = "LRS"
+
+# ----- Sensitive values — set via CI (TF_VAR_* env vars), do NOT commit real values -----
+firebase_credential_json = "<set-via-ci>"
+password_hash            = "<set-via-ci>"
+recaptcha_secret         = "<set-via-ci>"

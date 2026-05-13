@@ -58,3 +58,4 @@ output "blob_storage_endpoint" {
   description = "Primary blob storage endpoint"
   value       = module.blob_storage.primary_blob_endpoint
 }
+

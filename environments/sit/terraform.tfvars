@@ -18,9 +18,10 @@ container_target_port  = 8080
 log_retention_days     = 30
 
 # CosmosDB - SERVERLESS (pay-per-use, cheapest for low traffic)
-cosmosdb_free_tier_enabled = false
-cosmosdb_enable_serverless = true
-cosmosdb_throughput        = 400
+cosmosdb_free_tier_enabled    = false
+cosmosdb_enable_serverless    = true
+cosmosdb_throughput           = 400
+cosmosdb_single_database_mode = true
 
 # Key Vault
 key_vault_purge_protection_enabled = false

@@ -110,6 +110,13 @@ variable "password_hash" {
   sensitive   = true
 }
 
+# Bot Protection (Zet-19)
+variable "recaptcha_secret" {
+  description = "Google reCAPTCHA v3 secret key for backend verification."
+  type        = string
+  sensitive   = true
+}
+
 variable "key_vault_purge_protection_enabled" {
   description = "Enable Key Vault purge protection (recommended for production)"
   type        = bool

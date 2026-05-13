@@ -1,5 +1,12 @@
 name: "Terraform Plan"
 
+# Required GitHub Actions environment-scoped secrets (per `dev` / `sit` / `prod`):
+#   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SHARED_SUBSCRIPTION_ID, AZURE_ENV_SUBSCRIPTION_ID
+#   - FIREBASE_CREDENTIAL_JSON, PASSWORD_HASH
+#   - RECAPTCHA_SECRET (Zet-19 Bot Protection — see Infra/docs/zet-19-bot-protection.md).
+#     If you instead use suffix-named repo secrets (RECAPTCHA_SECRET_DEV, etc.),
+#     update the env: block on the plan job to map the right one per environment.
+
 on:
   workflow_call:
     inputs:
@@ -34,6 +41,7 @@ jobs:
           CHECK_ENV_SUB: ${{ secrets.AZURE_ENV_SUBSCRIPTION_ID }}
           CHECK_FIREBASE: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
           CHECK_PASSWORD_HASH: ${{ secrets.PASSWORD_HASH }}
+          CHECK_RECAPTCHA_SECRET: ${{ secrets.RECAPTCHA_SECRET }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           missing=()
@@ -44,6 +52,7 @@ jobs:
             [ -z "$CHECK_ENV_SUB" ] && missing+=("AZURE_ENV_SUBSCRIPTION_ID")
             [ -z "$CHECK_FIREBASE" ] && missing+=("FIREBASE_CREDENTIAL_JSON")
             [ -z "$CHECK_PASSWORD_HASH" ] && missing+=("PASSWORD_HASH")
+            [ -z "$CHECK_RECAPTCHA_SECRET" ] && missing+=("RECAPTCHA_SECRET")
           fi
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${missing[*]}"
@@ -75,6 +84,8 @@ jobs:
         env:
           TF_VAR_firebase_credential_json: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
           TF_VAR_password_hash: ${{ secrets.PASSWORD_HASH }}
+          # Zet-19 Bot Protection — see Infra/docs/zet-19-bot-protection.md
+          TF_VAR_recaptcha_secret: ${{ secrets.RECAPTCHA_SECRET }}
         run: terraform plan -input=false -no-color -var-file=terraform.tfvars -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 

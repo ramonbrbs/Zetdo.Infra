@@ -91,6 +91,12 @@ variable "cosmosdb_throughput" {
   default     = 400
 }
 
+variable "cosmosdb_single_database_mode" {
+  description = "When true, all containers share a single database (cost optimization)"
+  type        = bool
+  default     = false
+}
+
 # Key Vault variables
 variable "firebase_credential_json" {
   description = "Firebase credential JSON for Key Vault secret"
@@ -100,6 +106,13 @@ variable "firebase_credential_json" {
 
 variable "password_hash" {
   description = "Password hash for Key Vault secret"
+  type        = string
+  sensitive   = true
+}
+
+# Bot Protection (Zet-19)
+variable "recaptcha_secret" {
+  description = "Google reCAPTCHA v3 secret key for backend verification."
   type        = string
   sensitive   = true
 }

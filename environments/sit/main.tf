@@ -38,13 +38,14 @@ module "resource_group" {
 module "cosmosdb" {
   source = "../../modules/cosmosdb"
 
-  environment         = var.environment
-  location            = module.resource_group.location
-  location_short      = var.location_short
-  resource_group_name = module.resource_group.name
-  free_tier_enabled   = var.cosmosdb_free_tier_enabled
-  enable_serverless   = var.cosmosdb_enable_serverless
-  throughput          = var.cosmosdb_throughput
+  environment          = var.environment
+  location             = module.resource_group.location
+  location_short       = var.location_short
+  resource_group_name  = module.resource_group.name
+  free_tier_enabled    = var.cosmosdb_free_tier_enabled
+  enable_serverless    = var.cosmosdb_enable_serverless
+  throughput           = var.cosmosdb_throughput
+  single_database_mode = var.cosmosdb_single_database_mode
 
   tags = local.tags
 }
@@ -64,6 +65,7 @@ module "key_vault" {
 
   firebase_credential_json = var.firebase_credential_json
   password_hash            = var.password_hash
+  recaptcha_secret         = var.recaptcha_secret
 
   tags = local.tags
 }
@@ -101,6 +103,9 @@ module "container_app" {
   # Appointments feature (Zet-16, Calendar.Domain)
   appointment_cosmosdb_database_name  = module.cosmosdb.appointment_database_name
   appointment_cosmosdb_container_name = module.cosmosdb.appointments_container_name
+
+  # Bot Protection (Zet-19) — Container App pulls latest version on revision restart.
+  recaptcha_secret_key_vault_id = module.key_vault.recaptcha_secret_versionless_id
 
   tags = local.tags
 }

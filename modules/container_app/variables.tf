@@ -77,6 +77,13 @@ variable "key_vault_uri" {
   default     = ""
 }
 
+# -------- Bot Protection (Zet-19) --------
+variable "recaptcha_secret_key_vault_id" {
+  description = "Versionless Key Vault secret ID for BotProtection--RecaptchaSecret. The Container App pulls the latest version at revision restart."
+  type        = string
+  default     = ""
+}
+
 variable "blob_storage_endpoint" {
   description = "Primary blob storage endpoint URL"
   type        = string

@@ -57,6 +57,17 @@ resource "azurerm_container_app" "this" {
     identity = azurerm_user_assigned_identity.container_app.id
   }
 
+  # -------- Bot Protection (Zet-19, REQ-010) --------
+  # Pulls BotProtection--RecaptchaSecret from Key Vault using the user-assigned
+  # managed identity granted "Key Vault Secrets User" at the vault scope. The
+  # versionless ID makes the Container App pick up the latest secret version on
+  # the next revision restart, satisfying CON-003 (rotation without code change).
+  secret {
+    name                = "botprotection--recaptchasecret"
+    identity            = azurerm_user_assigned_identity.container_app.id
+    key_vault_secret_id = var.recaptcha_secret_key_vault_id
+  }
+
   template {
     min_replicas = var.min_replicas
     max_replicas = var.max_replicas
@@ -138,6 +149,15 @@ resource "azurerm_container_app" "this" {
       env {
         name  = "AppointmentCosmosDb__ContainerName"
         value = var.appointment_cosmosdb_container_name
+      }
+
+      # -------- Bot Protection (Zet-19, REQ-010) --------
+      # Hydrates Microsoft.Extensions.Configuration key BotProtection:RecaptchaSecret
+      # from the Container App secret defined above (which proxies the Key Vault
+      # secret BotProtection--RecaptchaSecret).
+      env {
+        name        = "BotProtection__RecaptchaSecret"
+        secret_name = "botprotection--recaptchasecret"
       }
     }
   }

@@ -49,3 +49,16 @@ resource "azurerm_key_vault_secret" "password_hash" {
 
   depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
 }
+
+# -------- Bot Protection (Zet-19) --------
+resource "azurerm_key_vault_secret" "recaptcha_secret" {
+  name         = "BotProtection--RecaptchaSecret"
+  value        = var.recaptcha_secret
+  key_vault_id = azurerm_key_vault.this.id
+
+  tags = {
+    "zet-19" = "bot-protection"
+  }
+
+  depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
+}

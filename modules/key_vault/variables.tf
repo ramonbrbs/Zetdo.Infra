@@ -42,6 +42,12 @@ variable "password_hash" {
   sensitive   = true
 }
 
+variable "recaptcha_secret" {
+  description = "Google reCAPTCHA v3 secret key for backend verification."
+  type        = string
+  sensitive   = true
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
