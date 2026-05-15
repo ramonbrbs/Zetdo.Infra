@@ -41,6 +41,10 @@ jobs:
           CHECK_FIREBASE: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
           CHECK_PASSWORD_HASH: ${{ secrets.PASSWORD_HASH }}
           CHECK_RECAPTCHA_SECRET: ${{ secrets.RECAPTCHA_SECRET }}
+          # Zet-21 Twilio Messaging
+          CHECK_TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          CHECK_TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          CHECK_TWILIO_MESSAGING_SERVICE_SID: ${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           missing=()
@@ -52,6 +56,9 @@ jobs:
             [ -z "$CHECK_FIREBASE" ] && missing+=("FIREBASE_CREDENTIAL_JSON")
             [ -z "$CHECK_PASSWORD_HASH" ] && missing+=("PASSWORD_HASH")
             [ -z "$CHECK_RECAPTCHA_SECRET" ] && missing+=("RECAPTCHA_SECRET")
+            [ -z "$CHECK_TWILIO_ACCOUNT_SID" ] && missing+=("TWILIO_ACCOUNT_SID")
+            [ -z "$CHECK_TWILIO_AUTH_TOKEN" ] && missing+=("TWILIO_AUTH_TOKEN")
+            [ -z "$CHECK_TWILIO_MESSAGING_SERVICE_SID" ] && missing+=("TWILIO_MESSAGING_SERVICE_SID")
           fi
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${missing[*]}"
@@ -83,6 +90,10 @@ jobs:
           TF_VAR_password_hash: ${{ secrets.PASSWORD_HASH }}
           # Zet-19 Bot Protection — see Infra/docs/zet-19-bot-protection.md
           TF_VAR_recaptcha_secret: ${{ secrets.RECAPTCHA_SECRET }}
+          # Zet-21 Twilio Messaging
+          TF_VAR_twilio_account_sid: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TF_VAR_twilio_auth_token: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TF_VAR_twilio_messaging_service_sid: ${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}
         run: terraform apply -input=false -auto-approve tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 
