@@ -1,21 +1,21 @@
 output "function_app_id" {
   description = "Function App resource ID"
-  value       = azurerm_linux_function_app.this.id
+  value       = azurerm_function_app_flex_consumption.this.id
 }
 
 output "function_app_name" {
   description = "Function App name"
-  value       = azurerm_linux_function_app.this.name
+  value       = azurerm_function_app_flex_consumption.this.name
 }
 
 output "principal_id" {
   description = "System-assigned managed identity principal ID of the Function App"
-  value       = azurerm_linux_function_app.this.identity[0].principal_id
+  value       = azurerm_function_app_flex_consumption.this.identity[0].principal_id
 }
 
 output "default_hostname" {
   description = "Default Function App hostname (e.g. <name>.azurewebsites.net)"
-  value       = azurerm_linux_function_app.this.default_hostname
+  value       = azurerm_function_app_flex_consumption.this.default_hostname
 }
 
 output "storage_account_id" {

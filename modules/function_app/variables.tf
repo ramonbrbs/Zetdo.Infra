@@ -19,15 +19,27 @@ variable "storage_account_name" {
 }
 
 variable "plan_sku" {
-  description = "App Service Plan SKU (Y1 = Consumption; FC1 = Flex Consumption when ready)"
+  description = "App Service Plan SKU (FC1 = Flex Consumption; Y1 = legacy Linux Consumption, retired 2028-09-30)"
   type        = string
-  default     = "Y1"
+  default     = "FC1"
 }
 
 variable "dotnet_version" {
-  description = "Function App .NET runtime version (e.g. 8.0, 9.0). Bump to 10.0 once azurerm provider supports it (hashicorp/terraform-provider-azurerm#30735)."
+  description = "Function App dotnet-isolated runtime version (e.g. 8.0, 9.0, 10.0). 10.0 is LTS (EOL 2028-11)."
   type        = string
-  default     = "8.0"
+  default     = "10.0"
+}
+
+variable "instance_memory_in_mb" {
+  description = "Flex Consumption per-instance memory in MB (512, 2048, or 4096)"
+  type        = number
+  default     = 2048
+}
+
+variable "maximum_instance_count" {
+  description = "Flex Consumption maximum scale-out instance count"
+  type        = number
+  default     = 100
 }
 
 variable "log_analytics_workspace_id" {

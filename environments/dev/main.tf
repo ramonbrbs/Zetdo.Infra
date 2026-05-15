@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.40.0, < 5.0"
     }
   }
 }
@@ -159,7 +159,7 @@ module "function_app_messaging" {
   # Functions runtime storage account (≤24 char, lowercase alphanumeric)
   storage_account_name       = "stzetdofn${var.environment}${var.location_short}"
   log_analytics_workspace_id = module.container_app.log_analytics_workspace_id
-  plan_sku                   = "Y1"
+  plan_sku                   = "FC1"
 
   # Service Bus (identity-based, no connection string)
   service_bus_namespace_fqdn = local.service_bus_namespace_fqdn
