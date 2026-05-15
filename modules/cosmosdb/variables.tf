@@ -43,9 +43,14 @@ variable "single_database_mode" {
 }
 
 variable "messaging_max_throughput" {
-  description = "Autoscale max RU/s for MessagingDB (provisioned-throughput accounts only — ignored for serverless). v1 = 400 RU/s autoscale."
+  description = "Autoscale max RU/s for MessagingDB (provisioned-throughput accounts only — ignored for serverless). Azure autoscale floor is 1000 RU/s in increments of 1000 (scales 100–1000 RU/s)."
   type        = number
-  default     = 400
+  default     = 1000
+
+  validation {
+    condition     = var.messaging_max_throughput >= 1000 && var.messaging_max_throughput % 1000 == 0
+    error_message = "messaging_max_throughput must be >= 1000 and a multiple of 1000 (Azure Cosmos DB autoscale constraint)."
+  }
 }
 
 variable "tags" {
