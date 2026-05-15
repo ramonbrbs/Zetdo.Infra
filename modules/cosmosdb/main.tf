@@ -838,13 +838,11 @@ resource "azurerm_cosmosdb_sql_container" "message_deliveries" {
       path = "/*"
     }
 
-    # Webhook cross-partition lookup by providerMessageSid (CON-304).
-    composite_index {
-      index {
-        path  = "/providerMessageSid"
-        order = "ascending"
-      }
-    }
+    # Webhook cross-partition lookup by providerMessageSid (CON-304):
+    # single-field equality only needs the property range-indexed (declared
+    # via included_path "/providerMessageSid/?" above). Cosmos rejects a
+    # composite index with <2 paths, and composite indexes only benefit
+    # multi-field ORDER BY / range queries — not needed here.
   }
 }
 
