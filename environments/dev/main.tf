@@ -63,9 +63,12 @@ module "key_vault" {
 
   purge_protection_enabled = var.key_vault_purge_protection_enabled
 
-  firebase_credential_json = var.firebase_credential_json
-  password_hash            = var.password_hash
-  recaptcha_secret         = var.recaptcha_secret
+  firebase_credential_json     = var.firebase_credential_json
+  password_hash                = var.password_hash
+  recaptcha_secret             = var.recaptcha_secret
+  twilio_account_sid           = var.twilio_account_sid
+  twilio_auth_token            = var.twilio_auth_token
+  twilio_messaging_service_sid = var.twilio_messaging_service_sid
 
   tags = local.tags
 }
@@ -107,8 +110,90 @@ module "container_app" {
   # Bot Protection (Zet-19) — Container App pulls latest version on revision restart.
   recaptcha_secret_key_vault_id = module.key_vault.recaptcha_secret_versionless_id
 
+  # -------- Twilio Messaging (Zet-21) --------
+  twilio_account_sid_key_vault_id           = module.key_vault.twilio_account_sid_versionless_id
+  twilio_auth_token_key_vault_id            = module.key_vault.twilio_auth_token_versionless_id
+  twilio_messaging_service_sid_key_vault_id = module.key_vault.twilio_messaging_service_sid_versionless_id
+  twilio_whatsapp_sender_e164               = var.twilio_whatsapp_sender_e164
+  twilio_status_callback_url                = local.twilio_status_callback_url
+  twilio_content_template_en                = var.twilio_content_template_en
+  twilio_content_template_ptbr              = var.twilio_content_template_ptbr
+
+  # -------- Service Bus (Zet-21) --------
+  # FQDN computed locally so Container App + Service Bus can be created in parallel.
+  service_bus_namespace_fqdn      = local.service_bus_namespace_fqdn
+  service_bus_reminder_queue_name = "reminders-due"
+
   tags = local.tags
 }
+
+# =============================================================================
+# Service Bus (Zet-21, REQ-301..REQ-303)
+# Created AFTER the Container App + Function App so their managed identities
+# are available for role assignments. FQDN above is computed deterministically
+# so the apps don't have to wait on the namespace.
+# =============================================================================
+module "service_bus" {
+  source = "../../modules/service_bus"
+
+  name                  = "sb-zetdo-${var.environment}-${var.location_short}"
+  location              = module.resource_group.location
+  resource_group_name   = module.resource_group.name
+  sku                   = "Standard"
+  producer_principal_id = module.container_app.managed_identity_principal_id
+  consumer_principal_id = module.function_app_messaging.principal_id
+
+  tags = local.tags
+}
+
+# =============================================================================
+# Function App — Twilio Messaging dispatcher (Zet-21, REQ-360..REQ-364)
+# =============================================================================
+module "function_app_messaging" {
+  source = "../../modules/function_app"
+
+  name                = "func-zetdo-reminders-${var.environment}-${var.location_short}"
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
+
+  # Functions runtime storage account (≤24 char, lowercase alphanumeric)
+  storage_account_name       = "stzetdofn${var.environment}${var.location_short}"
+  log_analytics_workspace_id = module.container_app.log_analytics_workspace_id
+  plan_sku                   = "Y1"
+
+  # Service Bus (identity-based, no connection string)
+  service_bus_namespace_fqdn = local.service_bus_namespace_fqdn
+
+  # Key Vault refs
+  key_vault_id                                     = module.key_vault.key_vault_id
+  key_vault_secret_id_twilio_account_sid           = module.key_vault.twilio_account_sid_versionless_id
+  key_vault_secret_id_twilio_auth_token            = module.key_vault.twilio_auth_token_versionless_id
+  key_vault_secret_id_twilio_messaging_service_sid = module.key_vault.twilio_messaging_service_sid_versionless_id
+
+  # Twilio plain
+  twilio_whatsapp_sender_e164  = var.twilio_whatsapp_sender_e164
+  twilio_status_callback_url   = local.twilio_status_callback_url
+  twilio_content_template_en   = var.twilio_content_template_en
+  twilio_content_template_ptbr = var.twilio_content_template_ptbr
+
+  # Cosmos DB
+  cosmos_account_id       = module.cosmosdb.account_id
+  cosmos_account_name     = module.cosmosdb.account_name
+  cosmos_account_endpoint = module.cosmosdb.endpoint
+
+  tags = local.tags
+}
+
+# =============================================================================
+# Function App — Key Vault Secrets User role (REQ-364)
+# Module-internal role assignment lives in the function_app module; this scope
+# is the same vault, so we rely on the module's `key_vault_id` input.
+# =============================================================================
+
+# =============================================================================
+# ACR Pull Role Assignment (function app does NOT pull from ACR — package deploy).
+# Service Bus role assignments live in the service_bus module.
+# =============================================================================
 
 # =============================================================================
 # Static Web App
@@ -189,4 +274,12 @@ locals {
     environment = var.environment
     managed_by  = "terraform"
   }
+
+  # Service Bus FQDN computed deterministically so the Container App, Function
+  # App, and Service Bus namespace can be created in parallel (REQ-340).
+  service_bus_namespace_fqdn = "sb-zetdo-${var.environment}-${var.location_short}.servicebus.windows.net"
+
+  # Twilio status-callback URL — points at the Web API (Container App), not the
+  # Function App. dev → api-dev.zetdo.com. sit/prod overrides in their main.tf.
+  twilio_status_callback_url = "https://api-dev.zetdo.com/api/v1/webhooks/twilio/status"
 }

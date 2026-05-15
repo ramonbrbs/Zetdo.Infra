@@ -42,6 +42,12 @@ variable "single_database_mode" {
   default     = false
 }
 
+variable "messaging_max_throughput" {
+  description = "Autoscale max RU/s for MessagingDB (provisioned-throughput accounts only — ignored for serverless). v1 = 400 RU/s autoscale."
+  type        = number
+  default     = 400
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

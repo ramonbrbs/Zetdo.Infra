@@ -40,6 +40,23 @@ variable "sku_size" {
   }
 }
 
+variable "custom_domain_name" {
+  description = "Optional custom domain to bind to the Static Web App (e.g. zetdo.com). Empty string disables the binding."
+  type        = string
+  default     = ""
+}
+
+variable "custom_domain_validation_type" {
+  description = "Validation type for the custom domain. Use 'dns-txt-token' for apex domains and 'cname-delegation' for subdomains."
+  type        = string
+  default     = "dns-txt-token"
+
+  validation {
+    condition     = contains(["dns-txt-token", "cname-delegation"], var.custom_domain_validation_type)
+    error_message = "custom_domain_validation_type must be either 'dns-txt-token' or 'cname-delegation'."
+  }
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

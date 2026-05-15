@@ -37,3 +37,8 @@ output "managed_identity_principal_id" {
   description = "User-assigned managed identity principal ID (for role assignments)"
   value       = azurerm_user_assigned_identity.container_app.principal_id
 }
+
+output "log_analytics_workspace_id" {
+  description = "Log Analytics workspace resource ID backing the Container App environment (shared with Function App App Insights)"
+  value       = azurerm_log_analytics_workspace.this.id
+}

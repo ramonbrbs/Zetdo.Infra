@@ -48,6 +48,25 @@ variable "recaptcha_secret" {
   sensitive   = true
 }
 
+# -------- Twilio Messaging (Zet-21) --------
+variable "twilio_account_sid" {
+  description = "Twilio Account SID (Zet-21, REQ-310)."
+  type        = string
+  sensitive   = true
+}
+
+variable "twilio_auth_token" {
+  description = "Twilio Auth Token (Zet-21, REQ-310). Highest rotation cadence — rotate independently."
+  type        = string
+  sensitive   = true
+}
+
+variable "twilio_messaging_service_sid" {
+  description = "Twilio Messaging Service SID (Zet-21, REQ-310)."
+  type        = string
+  sensitive   = true
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

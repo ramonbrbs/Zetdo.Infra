@@ -780,6 +780,76 @@ resource "azurerm_cosmosdb_sql_container" "stock" {
 }
 
 # =============================================================================
+# CosmosDB SQL Database - MessagingDB (Zet-21, Twilio Messaging — REQ-320)
+# Hosts the MessageDeliveries container. Always its own database (no
+# `single_database_mode` collapse) so messaging RU/s can be tuned independently.
+# Autoscale 400 RU/s (= max 400 RU/s, baseline 40 RU/s) keeps cost minimal for
+# v1 while leaving headroom for traffic spikes.
+# =============================================================================
+resource "azurerm_cosmosdb_sql_database" "messaging_db" {
+  name                = "MessagingDB"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+
+  # Provisioned-throughput accounts get autoscale; serverless ignores it.
+  dynamic "autoscale_settings" {
+    for_each = var.enable_serverless ? [] : [1]
+    content {
+      max_throughput = var.messaging_max_throughput
+    }
+  }
+}
+
+# =============================================================================
+# CosmosDB SQL Container - MessageDeliveries (Zet-21, REQ-320 / REQ-321)
+# Stores MessageDelivery documents partitioned by /companyId.
+# Indexing: only fields used by queries are indexed; everything else excluded
+# to keep RU/write low.
+# Composite index on (providerMessageSid ASC) covers webhook cross-partition
+# lookup (status callbacks carry MessageSid only — see CON-304).
+# TTL: disabled.
+# =============================================================================
+resource "azurerm_cosmosdb_sql_container" "message_deliveries" {
+  name                = "MessageDeliveries"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.messaging_db.name
+  partition_key_paths = ["/companyId"]
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/companyId/?"
+    }
+    included_path {
+      path = "/id/?"
+    }
+    included_path {
+      path = "/providerMessageSid/?"
+    }
+    included_path {
+      path = "/scheduledForUtc/?"
+    }
+    included_path {
+      path = "/appointmentId/?"
+    }
+
+    excluded_path {
+      path = "/*"
+    }
+
+    # Webhook cross-partition lookup by providerMessageSid (CON-304).
+    composite_index {
+      index {
+        path  = "/providerMessageSid"
+        order = "ascending"
+      }
+    }
+  }
+}
+
+# =============================================================================
 # CosmosDB SQL Database - BookingDB (multi-database mode only)
 # =============================================================================
 resource "azurerm_cosmosdb_sql_database" "booking_db" {

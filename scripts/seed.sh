@@ -36,6 +36,7 @@ SHARED_RG="rg-zetdo-shared-${LOCATION_SHORT}"
 DEV_RG="rg-zetdo-dev-${LOCATION_SHORT}"
 SIT_RG="rg-zetdo-sit-${LOCATION_SHORT}"
 PROD_RG="rg-zetdo-prod-${LOCATION_SHORT}"
+LANDING_RG="rg-zetdo-landing-${LOCATION_SHORT}"
 APP_NAME="zetdo-github-actions"
 
 # =============================================================================
@@ -121,6 +122,13 @@ az group create --subscription "$PROD_SUBSCRIPTION_ID" \
   --only-show-errors -o none
 echo "  $PROD_RG (prod subscription)"
 
+# Landing-page RG (dev subscription — no dedicated landing subscription)
+az group create --subscription "$DEV_SUBSCRIPTION_ID" \
+  --name "$LANDING_RG" --location "$LOCATION" \
+  --tags project=zetdo environment=landing managed_by=terraform \
+  --only-show-errors -o none
+echo "  $LANDING_RG (dev subscription)"
+
 # =============================================================================
 # 2. State Storage
 # =============================================================================
@@ -148,7 +156,7 @@ az storage account blob-service-properties update \
 echo "  Blob versioning enabled"
 
 # Create containers (one per environment + shared)
-for ENV in dev sit prod shared; do
+for ENV in dev sit prod shared landing; do
   az storage container create \
     --subscription "$DEV_SUBSCRIPTION_ID" \
     --account-name "$TFSTATE_SA" \
@@ -213,7 +221,7 @@ create_federated_credential "$APP_OBJECT_ID" \
   "GitHub Actions OIDC for sit (branch: refs/heads/master)"
 
 # Environment-based credentials
-for ENV in dev sit prod shared; do
+for ENV in dev sit prod shared landing; do
   create_federated_credential "$APP_OBJECT_ID" \
     "github-zetdo-${ENV}-env" \
     "repo:${GITHUB_ORG}/${GITHUB_REPO}:environment:${ENV}" \
@@ -237,6 +245,7 @@ DEV_RG_ID=$(az group show --subscription "$DEV_SUBSCRIPTION_ID" --name "$DEV_RG"
 SIT_RG_ID=$(az group show --subscription "$SIT_SUBSCRIPTION_ID" --name "$SIT_RG" --query id -o tsv)
 PROD_RG_ID=$(az group show --subscription "$PROD_SUBSCRIPTION_ID" --name "$PROD_RG" --query id -o tsv)
 SHARED_RG_ID=$(az group show --subscription "$DEV_SUBSCRIPTION_ID" --name "$SHARED_RG" --query id -o tsv)
+LANDING_RG_ID=$(az group show --subscription "$DEV_SUBSCRIPTION_ID" --name "$LANDING_RG" --query id -o tsv)
 TFSTATE_SA_ID=$(az storage account show --subscription "$DEV_SUBSCRIPTION_ID" \
   --resource-group "$TFSTATE_RG" --name "$TFSTATE_SA" --query id -o tsv)
 
@@ -249,6 +258,10 @@ assign_role "$PROD_RG_ID" "Contributor" "$SP_OBJECT_ID"
 assign_role "$DEV_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
 assign_role "$SIT_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
 assign_role "$PROD_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
+
+# Landing RG: Contributor (Static Web App provisioning). No Key Vault / Cosmos there,
+# so User Access Administrator is intentionally omitted.
+assign_role "$LANDING_RG_ID" "Contributor" "$SP_OBJECT_ID"
 
 # Shared RG: User Access Administrator (for ACR role assignments from environments)
 assign_role "$SHARED_RG_ID" "User Access Administrator" "$SP_OBJECT_ID"
@@ -277,10 +290,11 @@ echo "  AZURE_SHARED_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID"
 echo "  ACR_LOGIN_SERVER             = crzetdo${LOCATION_SHORT}.azurecr.io"
 echo ""
 echo "GitHub Environment Secrets:"
-echo "  dev:    AZURE_ENV_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID"
-echo "  sit:    AZURE_ENV_SUBSCRIPTION_ID = $SIT_SUBSCRIPTION_ID"
-echo "  prod:   AZURE_ENV_SUBSCRIPTION_ID = $PROD_SUBSCRIPTION_ID"
-echo "  shared: AZURE_ENV_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID"
+echo "  dev:     AZURE_ENV_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID"
+echo "  sit:     AZURE_ENV_SUBSCRIPTION_ID = $SIT_SUBSCRIPTION_ID"
+echo "  prod:    AZURE_ENV_SUBSCRIPTION_ID = $PROD_SUBSCRIPTION_ID"
+echo "  shared:  AZURE_ENV_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID"
+echo "  landing: AZURE_ENV_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID"
 echo ""
 echo "Next steps:"
 echo "  1. Create GitHub Environment 'shared' with AZURE_ENV_SUBSCRIPTION_ID = $DEV_SUBSCRIPTION_ID"

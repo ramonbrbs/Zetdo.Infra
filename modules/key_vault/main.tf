@@ -62,3 +62,42 @@ resource "azurerm_key_vault_secret" "recaptcha_secret" {
 
   depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
 }
+
+# -------- Twilio Messaging (Zet-21, REQ-310..REQ-312) --------
+# Three separately-rotatable secrets per CON-310. Kebab-case names match the
+# Resend convention; Container App + Function App pull via Key Vault references.
+resource "azurerm_key_vault_secret" "twilio_account_sid" {
+  name         = "twilio-account-sid"
+  value        = var.twilio_account_sid
+  key_vault_id = azurerm_key_vault.this.id
+
+  tags = {
+    "zet-21" = "twilio-messaging"
+  }
+
+  depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
+}
+
+resource "azurerm_key_vault_secret" "twilio_auth_token" {
+  name         = "twilio-auth-token"
+  value        = var.twilio_auth_token
+  key_vault_id = azurerm_key_vault.this.id
+
+  tags = {
+    "zet-21" = "twilio-messaging"
+  }
+
+  depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
+}
+
+resource "azurerm_key_vault_secret" "twilio_messaging_service_sid" {
+  name         = "twilio-messaging-service-sid"
+  value        = var.twilio_messaging_service_sid
+  key_vault_id = azurerm_key_vault.this.id
+
+  tags = {
+    "zet-21" = "twilio-messaging"
+  }
+
+  depends_on = [azurerm_role_assignment.deployer_key_vault_secrets_officer]
+}

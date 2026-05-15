@@ -141,6 +141,65 @@ variable "attachments_max_folder_depth" {
   default     = 8
 }
 
+# -------- Twilio Messaging (Zet-21, REQ-330) --------
+# Versionless Key Vault secret IDs. Container App pulls latest version on each
+# revision restart (CON-003 / AC-308). All three are optional so existing envs
+# keep planning cleanly until messaging is enabled.
+variable "twilio_account_sid_key_vault_id" {
+  description = "Versionless Key Vault secret ID for twilio-account-sid"
+  type        = string
+  default     = ""
+}
+
+variable "twilio_auth_token_key_vault_id" {
+  description = "Versionless Key Vault secret ID for twilio-auth-token"
+  type        = string
+  default     = ""
+}
+
+variable "twilio_messaging_service_sid_key_vault_id" {
+  description = "Versionless Key Vault secret ID for twilio-messaging-service-sid"
+  type        = string
+  default     = ""
+}
+
+variable "twilio_whatsapp_sender_e164" {
+  description = "WhatsApp sender phone number in E.164 (Twilio__WhatsAppSenderE164)"
+  type        = string
+  default     = ""
+}
+
+variable "twilio_status_callback_url" {
+  description = "Twilio status callback URL (Twilio__StatusCallbackUrl). Points at the Web API."
+  type        = string
+  default     = ""
+}
+
+variable "twilio_content_template_en" {
+  description = "Twilio Content Template SID for appointment-reminder en-US"
+  type        = string
+  default     = ""
+}
+
+variable "twilio_content_template_ptbr" {
+  description = "Twilio Content Template SID for appointment-reminder pt-BR"
+  type        = string
+  default     = ""
+}
+
+# -------- Service Bus (Zet-21, REQ-330 / REQ-331) --------
+variable "service_bus_namespace_fqdn" {
+  description = "Service Bus fully qualified namespace (e.g. sb-zetdo-dev-weu.servicebus.windows.net). Identity-based — no connection string."
+  type        = string
+  default     = ""
+}
+
+variable "service_bus_reminder_queue_name" {
+  description = "Name of the reminders queue (defaults to reminders-due)"
+  type        = string
+  default     = "reminders-due"
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

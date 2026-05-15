@@ -68,6 +68,37 @@ resource "azurerm_container_app" "this" {
     key_vault_secret_id = var.recaptcha_secret_key_vault_id
   }
 
+  # -------- Twilio Messaging (Zet-21, REQ-330) --------
+  # Three Key Vault secrets proxied as Container App secrets. Same versionless-ID
+  # pattern as bot protection (latest version pulled on revision restart). The
+  # secrets are only declared when the env wires Twilio (defaults to empty).
+  dynamic "secret" {
+    for_each = var.twilio_account_sid_key_vault_id == "" ? [] : [1]
+    content {
+      name                = "twilio--accountsid"
+      identity            = azurerm_user_assigned_identity.container_app.id
+      key_vault_secret_id = var.twilio_account_sid_key_vault_id
+    }
+  }
+
+  dynamic "secret" {
+    for_each = var.twilio_auth_token_key_vault_id == "" ? [] : [1]
+    content {
+      name                = "twilio--authtoken"
+      identity            = azurerm_user_assigned_identity.container_app.id
+      key_vault_secret_id = var.twilio_auth_token_key_vault_id
+    }
+  }
+
+  dynamic "secret" {
+    for_each = var.twilio_messaging_service_sid_key_vault_id == "" ? [] : [1]
+    content {
+      name                = "twilio--messagingservicesid"
+      identity            = azurerm_user_assigned_identity.container_app.id
+      key_vault_secret_id = var.twilio_messaging_service_sid_key_vault_id
+    }
+  }
+
   template {
     min_replicas = var.min_replicas
     max_replicas = var.max_replicas
@@ -158,6 +189,67 @@ resource "azurerm_container_app" "this" {
       env {
         name        = "BotProtection__RecaptchaSecret"
         secret_name = "botprotection--recaptchasecret"
+      }
+
+      # -------- Twilio Messaging (Zet-21, REQ-330) --------
+      # Secret-backed env vars only emitted when the matching Key Vault secret
+      # is wired by the environment (`var.*_key_vault_id != ""`).
+      dynamic "env" {
+        for_each = var.twilio_account_sid_key_vault_id == "" ? [] : [1]
+        content {
+          name        = "Twilio__AccountSid"
+          secret_name = "twilio--accountsid"
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.twilio_auth_token_key_vault_id == "" ? [] : [1]
+        content {
+          name        = "Twilio__AuthToken"
+          secret_name = "twilio--authtoken"
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.twilio_messaging_service_sid_key_vault_id == "" ? [] : [1]
+        content {
+          name        = "Twilio__MessagingServiceSid"
+          secret_name = "twilio--messagingservicesid"
+        }
+      }
+
+      # Plain Twilio env vars (REQ-330)
+      env {
+        name  = "Twilio__WhatsAppSenderE164"
+        value = var.twilio_whatsapp_sender_e164
+      }
+
+      env {
+        name  = "Twilio__StatusCallbackUrl"
+        value = var.twilio_status_callback_url
+      }
+
+      env {
+        name  = "Twilio__ContentTemplates__appointment-reminder__en-US"
+        value = var.twilio_content_template_en
+      }
+
+      env {
+        name  = "Twilio__ContentTemplates__appointment-reminder__pt-BR"
+        value = var.twilio_content_template_ptbr
+      }
+
+      # -------- Service Bus (Zet-21, REQ-330, REQ-331) --------
+      # Identity-based (CON-301) — no ConnectionString. Container App's UAMI
+      # is granted Azure Service Bus Data Sender on the namespace.
+      env {
+        name  = "ServiceBus__fullyQualifiedNamespace"
+        value = var.service_bus_namespace_fqdn
+      }
+
+      env {
+        name  = "ServiceBus__ReminderQueueName"
+        value = var.service_bus_reminder_queue_name
       }
     }
   }

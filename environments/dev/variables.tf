@@ -117,6 +117,43 @@ variable "recaptcha_secret" {
   sensitive   = true
 }
 
+# -------- Twilio Messaging (Zet-21) --------
+variable "twilio_account_sid" {
+  description = "Twilio Account SID — stored in Key Vault as twilio-account-sid (Zet-21)."
+  type        = string
+  sensitive   = true
+}
+
+variable "twilio_auth_token" {
+  description = "Twilio Auth Token — stored in Key Vault as twilio-auth-token (Zet-21). Rotates independently."
+  type        = string
+  sensitive   = true
+}
+
+variable "twilio_messaging_service_sid" {
+  description = "Twilio Messaging Service SID — stored in Key Vault as twilio-messaging-service-sid (Zet-21)."
+  type        = string
+  sensitive   = true
+}
+
+variable "twilio_whatsapp_sender_e164" {
+  description = "WhatsApp sender phone number in E.164 (e.g. +14155551234)."
+  type        = string
+  default     = ""
+}
+
+variable "twilio_content_template_en" {
+  description = "Twilio Content Template SID for appointment-reminder en-US."
+  type        = string
+  default     = ""
+}
+
+variable "twilio_content_template_ptbr" {
+  description = "Twilio Content Template SID for appointment-reminder pt-BR."
+  type        = string
+  default     = ""
+}
+
 variable "key_vault_purge_protection_enabled" {
   description = "Enable Key Vault purge protection (recommended for production)"
   type        = bool

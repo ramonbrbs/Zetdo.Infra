@@ -48,7 +48,7 @@ jobs:
           [ -z "$CHECK_CLIENT_ID" ] && missing+=("AZURE_CLIENT_ID")
           [ -z "$CHECK_TENANT_ID" ] && missing+=("AZURE_TENANT_ID")
           [ -z "$CHECK_SHARED_SUB" ] && missing+=("AZURE_SHARED_SUBSCRIPTION_ID")
-          if [ "$ENVIRONMENT" != "shared" ]; then
+          if [ "$ENVIRONMENT" != "shared" ] && [ "$ENVIRONMENT" != "landing" ]; then
             [ -z "$CHECK_ENV_SUB" ] && missing+=("AZURE_ENV_SUBSCRIPTION_ID")
             [ -z "$CHECK_FIREBASE" ] && missing+=("FIREBASE_CREDENTIAL_JSON")
             [ -z "$CHECK_PASSWORD_HASH" ] && missing+=("PASSWORD_HASH")

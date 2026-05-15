@@ -1,0 +1,9 @@
+# Landing Environment Configuration
+# Landing lives in the dev subscription (no dedicated landing subscription).
+subscription_id = "YOUR_DEV_SUBSCRIPTION_ID"
+environment     = "landing"
+location_short  = "weu"
+
+# Custom domain (apex)
+custom_domain_name            = "zetdo.com"
+custom_domain_validation_type = "dns-txt-token"

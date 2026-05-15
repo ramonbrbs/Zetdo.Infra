@@ -63,9 +63,12 @@ module "key_vault" {
 
   purge_protection_enabled = var.key_vault_purge_protection_enabled
 
-  firebase_credential_json = var.firebase_credential_json
-  password_hash            = var.password_hash
-  recaptcha_secret         = var.recaptcha_secret
+  firebase_credential_json     = var.firebase_credential_json
+  password_hash                = var.password_hash
+  recaptcha_secret             = var.recaptcha_secret
+  twilio_account_sid           = var.twilio_account_sid
+  twilio_auth_token            = var.twilio_auth_token
+  twilio_messaging_service_sid = var.twilio_messaging_service_sid
 
   tags = local.tags
 }
@@ -106,6 +109,68 @@ module "container_app" {
 
   # Bot Protection (Zet-19) — Container App pulls latest version on revision restart.
   recaptcha_secret_key_vault_id = module.key_vault.recaptcha_secret_versionless_id
+
+  # -------- Twilio Messaging (Zet-21) --------
+  twilio_account_sid_key_vault_id           = module.key_vault.twilio_account_sid_versionless_id
+  twilio_auth_token_key_vault_id            = module.key_vault.twilio_auth_token_versionless_id
+  twilio_messaging_service_sid_key_vault_id = module.key_vault.twilio_messaging_service_sid_versionless_id
+  twilio_whatsapp_sender_e164               = var.twilio_whatsapp_sender_e164
+  twilio_status_callback_url                = local.twilio_status_callback_url
+  twilio_content_template_en                = var.twilio_content_template_en
+  twilio_content_template_ptbr              = var.twilio_content_template_ptbr
+
+  # -------- Service Bus (Zet-21) --------
+  service_bus_namespace_fqdn      = local.service_bus_namespace_fqdn
+  service_bus_reminder_queue_name = "reminders-due"
+
+  tags = local.tags
+}
+
+# =============================================================================
+# Service Bus (Zet-21, REQ-301..REQ-303)
+# =============================================================================
+module "service_bus" {
+  source = "../../modules/service_bus"
+
+  name                  = "sb-zetdo-${var.environment}-${var.location_short}"
+  location              = module.resource_group.location
+  resource_group_name   = module.resource_group.name
+  sku                   = "Standard"
+  producer_principal_id = module.container_app.managed_identity_principal_id
+  consumer_principal_id = module.function_app_messaging.principal_id
+
+  tags = local.tags
+}
+
+# =============================================================================
+# Function App — Twilio Messaging dispatcher (Zet-21, REQ-360..REQ-364)
+# =============================================================================
+module "function_app_messaging" {
+  source = "../../modules/function_app"
+
+  name                = "func-zetdo-reminders-${var.environment}-${var.location_short}"
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
+
+  storage_account_name       = "stzetdofn${var.environment}${var.location_short}"
+  log_analytics_workspace_id = module.container_app.log_analytics_workspace_id
+  plan_sku                   = "Y1"
+
+  service_bus_namespace_fqdn = local.service_bus_namespace_fqdn
+
+  key_vault_id                                     = module.key_vault.key_vault_id
+  key_vault_secret_id_twilio_account_sid           = module.key_vault.twilio_account_sid_versionless_id
+  key_vault_secret_id_twilio_auth_token            = module.key_vault.twilio_auth_token_versionless_id
+  key_vault_secret_id_twilio_messaging_service_sid = module.key_vault.twilio_messaging_service_sid_versionless_id
+
+  twilio_whatsapp_sender_e164  = var.twilio_whatsapp_sender_e164
+  twilio_status_callback_url   = local.twilio_status_callback_url
+  twilio_content_template_en   = var.twilio_content_template_en
+  twilio_content_template_ptbr = var.twilio_content_template_ptbr
+
+  cosmos_account_id       = module.cosmosdb.account_id
+  cosmos_account_name     = module.cosmosdb.account_name
+  cosmos_account_endpoint = module.cosmosdb.endpoint
 
   tags = local.tags
 }
@@ -189,4 +254,8 @@ locals {
     environment = var.environment
     managed_by  = "terraform"
   }
+
+  service_bus_namespace_fqdn = "sb-zetdo-${var.environment}-${var.location_short}.servicebus.windows.net"
+
+  twilio_status_callback_url = "https://api-sit.zetdo.com/api/v1/webhooks/twilio/status"
 }

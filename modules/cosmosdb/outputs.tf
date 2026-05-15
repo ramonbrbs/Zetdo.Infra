@@ -81,3 +81,13 @@ output "attachments_container_name" {
   description = "Cosmos container for attachment metadata"
   value       = azurerm_cosmosdb_sql_container.attachments.name
 }
+
+output "messaging_database_name" {
+  description = "CosmosDB MessagingDB database name (Zet-21, Twilio Messaging)"
+  value       = azurerm_cosmosdb_sql_database.messaging_db.name
+}
+
+output "message_deliveries_container_name" {
+  description = "Cosmos container for MessageDelivery documents (Zet-21)"
+  value       = azurerm_cosmosdb_sql_container.message_deliveries.name
+}

@@ -23,3 +23,8 @@ output "api_key" {
   value       = azurerm_static_web_app.this.api_key
   sensitive   = true
 }
+
+output "custom_domain_validation_token" {
+  description = "Validation token to publish as a TXT record at the custom domain. Null when no custom domain configured."
+  value       = try(azurerm_static_web_app_custom_domain.this[0].validation_token, null)
+}

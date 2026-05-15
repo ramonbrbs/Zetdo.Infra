@@ -1,0 +1,50 @@
+name: "Terraform Landing Infrastructure"
+
+# Landing is single-environment (production) and lives in the dev subscription.
+# It only provisions an Azure Static Web App + custom domain binding for zetdo.com.
+# Trigger: push to master with changes under environments/landing/**.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "environments/landing/**"
+      - "modules/static_web_app/**"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "environments/landing/**"
+      - "modules/static_web_app/**"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: terraform-landing
+  cancel-in-progress: false
+
+jobs:
+  # =========================================================================
+  # Plan
+  # =========================================================================
+  plan:
+    uses: ./.github/workflows/_terraform-plan.yml
+    with:
+      environment: landing
+    secrets: inherit
+
+  # =========================================================================
+  # Apply (only on push to master or manual dispatch, not PRs)
+  # =========================================================================
+  apply:
+    needs: plan
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/_terraform-apply.yml
+    with:
+      environment: landing
+    secrets: inherit

@@ -36,7 +36,15 @@ static_web_app_sku_size = "Free"
 # Blob Storage
 blob_storage_replication_type = "LRS"
 
+# Twilio Messaging (Zet-21) — non-sensitive
+twilio_whatsapp_sender_e164  = "+14155551234"
+twilio_content_template_en   = "HX00000000000000000000000000000000"
+twilio_content_template_ptbr = "HX11111111111111111111111111111111"
+
 # ----- Sensitive values — set via CI (TF_VAR_* env vars), do NOT commit real values -----
-firebase_credential_json = "<set-via-ci>"
-password_hash            = "<set-via-ci>"
-recaptcha_secret         = "<set-via-ci>"
+firebase_credential_json     = "<set-via-ci>"
+password_hash                = "<set-via-ci>"
+recaptcha_secret             = "<set-via-ci>"
+twilio_account_sid           = "<set-via-ci>"
+twilio_auth_token            = "<set-via-ci>"
+twilio_messaging_service_sid = "<set-via-ci>"
