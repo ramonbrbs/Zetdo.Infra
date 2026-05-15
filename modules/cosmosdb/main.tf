@@ -822,9 +822,8 @@ resource "azurerm_cosmosdb_sql_container" "message_deliveries" {
     included_path {
       path = "/companyId/?"
     }
-    included_path {
-      path = "/id/?"
-    }
+    # NOTE: /id is a system property and is always indexed automatically.
+    # Listing "/id/?" explicitly is rejected by Cosmos ("overrides system property 'id'").
     included_path {
       path = "/providerMessageSid/?"
     }

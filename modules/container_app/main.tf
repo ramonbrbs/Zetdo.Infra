@@ -229,14 +229,17 @@ resource "azurerm_container_app" "this" {
         value = var.twilio_status_callback_url
       }
 
+      # ContentTemplates as a single JSON setting (kept consistent with the
+      # reminders Function App, where hyphenated env var names are rejected).
+      # Parsed back into TwilioOptions.ContentTemplates in code.
       env {
-        name  = "Twilio__ContentTemplates__appointment-reminder__en-US"
-        value = var.twilio_content_template_en
-      }
-
-      env {
-        name  = "Twilio__ContentTemplates__appointment-reminder__pt-BR"
-        value = var.twilio_content_template_ptbr
+        name = "Twilio__ContentTemplatesJson"
+        value = jsonencode({
+          "appointment-reminder" = {
+            "en-US" = var.twilio_content_template_en
+            "pt-BR" = var.twilio_content_template_ptbr
+          }
+        })
       }
 
       # -------- Service Bus (Zet-21, REQ-330, REQ-331) --------

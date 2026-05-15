@@ -101,10 +101,17 @@ resource "azurerm_linux_function_app" "this" {
       "Twilio__MessagingServiceSid" = "@Microsoft.KeyVault(SecretUri=${var.key_vault_secret_id_twilio_messaging_service_sid})"
 
       # Twilio plain config
-      "Twilio__WhatsAppSenderE164"                            = var.twilio_whatsapp_sender_e164
-      "Twilio__StatusCallbackUrl"                             = var.twilio_status_callback_url
-      "Twilio__ContentTemplates__appointment-reminder__en-US" = var.twilio_content_template_en
-      "Twilio__ContentTemplates__appointment-reminder__pt-BR" = var.twilio_content_template_ptbr
+      "Twilio__WhatsAppSenderE164" = var.twilio_whatsapp_sender_e164
+      "Twilio__StatusCallbackUrl"  = var.twilio_status_callback_url
+      # ContentTemplates as a single JSON setting: dict keys contain hyphens
+      # ("appointment-reminder", "pt-BR") which are illegal in Linux Function App
+      # env var NAMES. Parsed back into TwilioOptions.ContentTemplates in code.
+      "Twilio__ContentTemplatesJson" = jsonencode({
+        "appointment-reminder" = {
+          "en-US" = var.twilio_content_template_en
+          "pt-BR" = var.twilio_content_template_ptbr
+        }
+      })
 
       # Cosmos (managed-identity reads)
       "Cosmos__AccountEndpoint" = var.cosmos_account_endpoint
