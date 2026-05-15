@@ -47,15 +47,26 @@ resource "azurerm_storage_container" "deployments" {
 
 # =============================================================================
 # Service Plan (Flex Consumption FC1 by default; Y1 = legacy Linux Consumption)
+#
+# Azure rejects an in-place SKU change Dynamic (Y1) -> FlexConsumption (FC1)
+# on an existing server farm ("Cannot update ServerFarm SKU ... create a new
+# ServerFarm"). The "-fc" name suffix makes the plan name (ForceNew) differ
+# from the legacy Y1 farm, so Terraform replaces it instead of updating in
+# place. create_before_destroy stands the new farm up before the old one is
+# torn down (the old Function App is destroyed first via its dependency).
 # =============================================================================
 resource "azurerm_service_plan" "this" {
-  name                = "asp-${var.name}"
+  name                = "asp-${var.name}-fc"
   resource_group_name = var.resource_group_name
   location            = var.location
   os_type             = "Linux"
   sku_name            = var.plan_sku
 
   tags = var.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # =============================================================================
