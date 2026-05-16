@@ -30,7 +30,7 @@ variable "producer_principal_id" {
 }
 
 variable "consumer_principal_id" {
-  description = "Principal ID of the consumer identity (Function App system MI). Granted Azure Service Bus Data Receiver."
+  description = "Principal ID of the Function App system MI. Granted Azure Service Bus Data Receiver (dispatch consume) and Data Sender (sweep promotes far-future reminders via ScheduleMessageAsync)."
   type        = string
 }
 

@@ -46,9 +46,21 @@ resource "azurerm_role_assignment" "producer_sender" {
 
 # =============================================================================
 # Role Assignment — Consumer (Function App system MI) → Data Receiver (REQ-364)
+# ReminderDispatchFunction (ServiceBusTrigger) consumes the queue.
 # =============================================================================
 resource "azurerm_role_assignment" "consumer_receiver" {
   scope                = azurerm_servicebus_namespace.this.id
   role_definition_name = "Azure Service Bus Data Receiver"
+  principal_id         = var.consumer_principal_id
+}
+
+# =============================================================================
+# Role Assignment — Consumer (Function App system MI) → Data Sender
+# ReminderSweepFunction promotes far-future Pending reminders by scheduling
+# them on the queue (ScheduleMessageAsync), so the Function MI also sends.
+# =============================================================================
+resource "azurerm_role_assignment" "consumer_sender" {
+  scope                = azurerm_servicebus_namespace.this.id
+  role_definition_name = "Azure Service Bus Data Sender"
   principal_id         = var.consumer_principal_id
 }
